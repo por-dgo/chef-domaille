@@ -230,8 +230,19 @@ if __name__ == "__main__":
     host = "127.0.0.1"
     port = _find_available_port(host, 5000)
     url = f"http://{host}:{port}"
-    print(f"Starting Chef Domaille at {url}")
+
+    # Set console title on Windows
+    if os.name == "nt":
+        ctypes.windll.kernel32.SetConsoleTitleW(f"Chef Domaille — {url}")
+
+    print()
+    print("  🍳 Chef Domaille")
+    print(f"  ─────────────────────────────────────")
+    print(f"  Running at:  {url}")
+    print(f"  Close this window to stop the server.")
+    print(f"  ─────────────────────────────────────")
+    print()
+
     app = create_app()
-    # Open the default browser shortly after server startup begins.
     threading.Timer(0.8, lambda: webbrowser.open(url, new=2)).start()
     app.run(host=host, port=port, debug=False)
