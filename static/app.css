@@ -1,23 +1,39 @@
 :root {
-  --bg-top: #efe3d5;
-  --bg-bottom: #d9e4eb;
-  --surface: #fffdf8;
+  color-scheme: light dark;
+  --bg-top: #f4f7fb;
+  --bg-bottom: #e8eef7;
+  --surface: rgba(255, 255, 255, 0.88);
   --surface-strong: #ffffff;
-  --ink: #1d2430;
-  --muted: #5f6b7b;
-  --line: #d6dce2;
-  --accent: #1f6f78;
-  --accent-strong: #175860;
-  --shadow: 0 12px 30px rgba(24, 41, 56, 0.08);
+  --ink: #0f172a;
+  --muted: #5b687c;
+  --line: #d6ddeb;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: #e8efff;
+  --chip-bg: #edf3ff;
+  --chip-line: #c9d9ff;
+  --chip-ink: #1f3f83;
+  --ok: #15803d;
+  --error: #b4232d;
+  --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+@supports (color: AccentColor) {
+  :root {
+    --accent: AccentColor;
+    --accent-strong: AccentColor;
+    --accent-soft: color-mix(in oklab, AccentColor 18%, white);
+  }
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: "Trebuchet MS", "Segoe UI", Tahoma, sans-serif;
+  font-family: "Segoe UI Variable", "Segoe UI", "Trebuchet MS", sans-serif;
   color: var(--ink);
-  background: linear-gradient(165deg, var(--bg-top), var(--bg-bottom));
+  background: radial-gradient(1200px 520px at 12% -8%, rgba(37, 99, 235, 0.16), transparent 60%),
+              linear-gradient(165deg, var(--bg-top), var(--bg-bottom));
 }
 
 .page-bg {
@@ -30,18 +46,19 @@ body {
   border: 1px solid var(--line);
   border-radius: 16px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(6px);
 }
 
 .topbar {
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
-  background: linear-gradient(115deg, #fff, #f4f9fc);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.9), rgba(240, 246, 255, 0.9));
 }
 
 .topbar h1 {
   margin: 0;
   font-size: 1.6rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
 .topbar p {
@@ -111,12 +128,21 @@ input,
 select,
 textarea {
   width: 100%;
-  padding: 0.48rem 0.52rem;
+  padding: 0.5rem 0.58rem;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 10px;
   min-width: 100px;
-  background: #ffffff;
+  background: var(--surface-strong);
   color: var(--ink);
+  accent-color: var(--accent);
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: 2px solid color-mix(in oklab, var(--accent) 35%, transparent);
+  outline-offset: 1px;
 }
 
 textarea {
@@ -128,14 +154,16 @@ button {
   border: none;
   background: linear-gradient(180deg, var(--accent), var(--accent-strong));
   color: #fff;
-  padding: 0.48rem 0.82rem;
+  padding: 0.5rem 0.86rem;
   border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+  transition: transform 120ms ease, filter 120ms ease;
 }
 
 button:hover {
-  filter: brightness(1.03);
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
 .recipe-list {
@@ -154,12 +182,12 @@ button:hover {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #fff;
+  background: var(--surface-strong);
 }
 
 .recipe-list li.active {
-  border-color: var(--accent);
-  background: #eff7f8;
+  border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
+  background: var(--accent-soft);
 }
 
 .step-nav {
@@ -177,13 +205,13 @@ button:hover {
 }
 
 .tab-btn {
-  background: #edf2f6;
-  color: #294258;
-  border: 1px solid #d2dce6;
+  background: #eef2fa;
+  color: #33435b;
+  border: 1px solid var(--line);
 }
 
 .tab-btn.active {
-  background: linear-gradient(180deg, #2f7f8a, #1f6670);
+  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
   color: #fff;
   border-color: transparent;
 }
@@ -193,12 +221,12 @@ button:hover {
   border-radius: 12px;
   padding: 0.65rem;
   margin-bottom: 0.7rem;
-  background: #fdfefe;
+  background: var(--surface-strong);
 }
 
 .tab-panel h4 {
   margin: 0 0 0.55rem;
-  color: #2a3946;
+  color: #304157;
 }
 
 .settings-group {
@@ -228,11 +256,11 @@ button:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #ecf6f7;
-  border: 1px solid #c9e3e6;
-  color: #1f4252;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-line);
+  color: var(--chip-ink);
   border-radius: 999px;
-  padding: 0.2rem 0.55rem;
+  padding: 0.22rem 0.58rem;
   font-size: 0.8rem;
   cursor: grab;
   user-select: none;
@@ -247,14 +275,14 @@ button:hover {
 }
 
 .chip-drop-target {
-  outline: 2px dashed #66a7b2;
+  outline: 2px dashed color-mix(in oklab, var(--accent) 70%, #80a4ea);
   outline-offset: 2px;
 }
 
 .chip-remove {
   border: none;
   background: transparent;
-  color: #1f4252;
+  color: inherit;
   cursor: pointer;
   padding: 0;
   font-size: 0.8rem;
@@ -262,9 +290,9 @@ button:hover {
 }
 
 .secondary-btn {
-  background: #e7edf2;
-  color: #274154;
-  border: 1px solid #cdd8e2;
+  background: #edf2fb;
+  color: #24405f;
+  border: 1px solid var(--line);
 }
 
 .toast-container {
@@ -282,32 +310,36 @@ button:hover {
   border-radius: 12px;
   padding: 0.6rem 0.75rem;
   color: #fff;
-  box-shadow: 0 8px 22px rgba(19, 35, 45, 0.18);
+  box-shadow: 0 8px 22px rgba(19, 35, 45, 0.2);
   animation: toast-slide 180ms ease-out;
   white-space: pre-wrap;
 }
 
 .toast-ok {
-  background: linear-gradient(180deg, #2f7f6a, #246555);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ok) 82%, white), var(--ok));
 }
 
 .toast-error {
-  background: linear-gradient(180deg, #b64352, #8f3340);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--error) 82%, white), var(--error));
 }
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(19, 30, 40, 0.4);
-  backdrop-filter: blur(2px);
+  background: rgba(16, 23, 37, 0.4);
+  backdrop-filter: blur(3px);
   display: grid;
   place-items: center;
   z-index: 1200;
 }
 
+.modal-overlay[hidden] {
+  display: none !important;
+}
+
 .modal-card {
   width: min(420px, calc(100vw - 1.2rem));
-  background: #fff;
+  background: var(--surface-strong);
   border: 1px solid var(--line);
   border-radius: 14px;
   box-shadow: 0 14px 30px rgba(12, 25, 34, 0.22);
@@ -320,7 +352,7 @@ button:hover {
 
 .modal-card p {
   margin: 0 0 0.8rem;
-  color: #3a4955;
+  color: var(--muted);
 }
 
 .modal-actions {
@@ -337,6 +369,66 @@ button:hover {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-top: #0e1525;
+    --bg-bottom: #0b111d;
+    --surface: rgba(17, 25, 40, 0.86);
+    --surface-strong: #131d2f;
+    --ink: #e4eaf4;
+    --muted: #9ba9be;
+    --line: #27354d;
+    --accent-soft: rgba(37, 99, 235, 0.2);
+    --chip-bg: rgba(59, 130, 246, 0.18);
+    --chip-line: #355483;
+    --chip-ink: #dbe9ff;
+    --shadow: 0 16px 34px rgba(0, 0, 0, 0.35);
+  }
+
+  .topbar {
+    background: linear-gradient(120deg, rgba(19, 30, 47, 0.92), rgba(20, 36, 62, 0.92));
+  }
+
+  .tab-btn {
+    background: #19263a;
+    color: #c8d4e6;
+  }
+
+  .secondary-btn {
+    background: #1a2a40;
+    color: #d4e1f2;
+  }
+}
+
+@media (forced-colors: active) {
+  :root {
+    --surface: Canvas;
+    --surface-strong: Canvas;
+    --ink: CanvasText;
+    --muted: GrayText;
+    --line: CanvasText;
+    --accent: Highlight;
+    --accent-strong: Highlight;
+    --accent-soft: Canvas;
+    --chip-bg: Canvas;
+    --chip-line: CanvasText;
+    --chip-ink: CanvasText;
+  }
+
+  .card,
+  .tab-panel,
+  .modal-card,
+  .recipe-list li,
+  input,
+  select,
+  textarea,
+  button,
+  .chip {
+    forced-color-adjust: auto;
+    box-shadow: none;
   }
 }
 
