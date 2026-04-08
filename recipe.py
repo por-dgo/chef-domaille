@@ -6,18 +6,49 @@
 
 import os
 
+from recipe_io import read_recipe, read_step, serialize_kv_lines, write_recipe, write_step
+
+
+DOMAILLE_ROOT = "Domaille"
+
+
+def _default_step_data(time, pressure, fci, film, description1, description2=""):
+  data = {
+    "rRecipeStepTime": time,
+    "rRecipeStepSpeed": 110,
+    "rRecipeStepSpeedRamp": 1,
+    "rRecipeStepPressure": pressure,
+    "rRecipeStepPressureRamp": 1,
+    "rRecipeStepFCI": fci,
+    "rRecipeStepLowerSpeedLimit": 10,
+    "rRecipeStepUpperSpeedLimit": 10,
+    "rRecipeStepLowerPressureLimit": 0.5,
+    "rRecipeStepUpperPressureLimit": 0.5,
+    "rRecipeStepFixtureWeight": 0,
+    "intRecipeStepOpCode": 300,
+    "strRecipeStepFilm": film,
+    "strRecipeStepLubricant": "DI Water",
+    "strRecipeStepPad": "70 Duro Violet",
+    "strRecipeStepDescription1": description1,
+  }
+  if description2:
+    data["strRecipeStepDescription2"] = description2
+  data["rRecipeStepSpeedRampDn"] = 1
+  data["rRecipeStepPressureRampDn"] = 1
+  return data
+
 def CreateDefaultFiles(default="default"):
   ''' Create Default Directory Structure and Files for Polisher Recipes '''
   print("Creating default directory structure...", end=" ")
   try:
-    os.makedirs('Domaille/Processes/Steps')
+    os.makedirs(f'{DOMAILLE_ROOT}/Processes/Steps')
   except Exception as e:
     print('FAILED: ', e)
     raise e
   else: print('done.')
   print("Creating default settings file...", end=" ")
   try:
-    with open('Domaille/Settings.txt', 'x') as f:
+    with open(f'{DOMAILLE_ROOT}/Settings.txt', 'x') as f:
       f.write('Max Quantity,72\n')
       f.write('Film,<None>,Brown 5um,Purple 1um,Clear FOS-22\n')
       f.write('Pad,<None>,60 Duro Blue,65 Duro Dark Blue,70 Duro Violet,')
@@ -29,73 +60,32 @@ def CreateDefaultFiles(default="default"):
   else: print('done.')
   print("Creating default 3-step recipe...", end=" ")
   try:
-    with open(f'Domaille/Processes/{default}', 'w') as f:
-      f.write("strRecipeDescription := default recipe\n")
-      f.write("intRecipeNoOfSteps := 3\n")
-      f.write("intRecipeQty := 30\n")
-      f.write("intRecipeReworkStep := 1\n")
+    recipe_data = {
+      "strRecipeDescription": "default recipe",
+      "intRecipeNoOfSteps": 3,
+      "intRecipeQty": 30,
+      "intRecipeReworkStep": 1,
+    }
+    write_recipe(DOMAILLE_ROOT, default, recipe_data)
 
-    with open(f'Domaille/Processes/Steps/{default}.001', 'w') as f:
-      f.write("rRecipeStepTime := 25\n")
-      f.write("rRecipeStepSpeed := 110\n")
-      f.write("rRecipeStepSpeedRamp := 1\n")
-      f.write("rRecipeStepPressure := 15\n")
-      f.write("rRecipeStepPressureRamp := 1\n")
-      f.write("rRecipeStepFCI := 5\n")
-      f.write("rRecipeStepLowerSpeedLimit := 10\n")
-      f.write("rRecipeStepUpperSpeedLimit := 10\n")
-      f.write("rRecipeStepLowerPressureLimit := 0.5\n")
-      f.write("rRecipeStepUpperPressureLimit := 0.5\n")
-      f.write("rRecipeStepFixtureWeight := 0\n")
-      f.write("intRecipeStepOpCode := 300\n")
-      f.write("strRecipeStepFilm := Brown 5um\n")
-      f.write("strRecipeStepLubricant := DI Water\n")
-      f.write("strRecipeStepPad := 70 Duro Violet\n")
-      f.write("strRecipeStepDescription1 := Rough Polish\n")
-      f.write("strRecipeStepDescription2 := Geometry\n")
-      f.write("rRecipeStepSpeedRampDn := 1\n")
-      f.write("rRecipeStepPressureRampDn := 1\n")
-
-    with open(f'Domaille/Processes/Steps/{default}.002', 'w') as f:
-      f.write("rRecipeStepTime := 35\n")
-      f.write("rRecipeStepSpeed := 110\n")
-      f.write("rRecipeStepSpeedRamp := 1\n")
-      f.write("rRecipeStepPressure := 12\n")
-      f.write("rRecipeStepPressureRamp := 1\n")
-      f.write("rRecipeStepFCI := 5\n")
-      f.write("rRecipeStepLowerSpeedLimit := 10\n")
-      f.write("rRecipeStepUpperSpeedLimit := 10\n")
-      f.write("rRecipeStepLowerPressureLimit := 0.5\n")
-      f.write("rRecipeStepUpperPressureLimit := 0.5\n")
-      f.write("rRecipeStepFixtureWeight := 0\n")
-      f.write("intRecipeStepOpCode := 300\n")
-      f.write("strRecipeStepFilm := Purple 1um\n")
-      f.write("strRecipeStepLubricant := DI Water\n")
-      f.write("strRecipeStepPad := 70 Duro Violet\n")
-      f.write("strRecipeStepDescription1 := Medium Polish\n")
-      f.write("rRecipeStepSpeedRampDn := 1\n")
-      f.write("rRecipeStepPressureRampDn := 1\n")
-
-
-    with open(f'Domaille/Processes/Steps/{default}.003', 'w') as f:
-      f.write("rRecipeStepTime := 35\n")
-      f.write("rRecipeStepSpeed := 110\n")
-      f.write("rRecipeStepSpeedRamp := 1\n")
-      f.write("rRecipeStepPressure := 12\n")
-      f.write("rRecipeStepPressureRamp := 1\n")
-      f.write("rRecipeStepFCI := 3\n")
-      f.write("rRecipeStepLowerSpeedLimit := 10\n")
-      f.write("rRecipeStepUpperSpeedLimit := 10\n")
-      f.write("rRecipeStepLowerPressureLimit := 0.5\n")
-      f.write("rRecipeStepUpperPressureLimit := 0.5\n")
-      f.write("rRecipeStepFixtureWeight := 0\n")
-      f.write("intRecipeStepOpCode := 300\n")
-      f.write("strRecipeStepFilm := Clear FOS-22\n")
-      f.write("strRecipeStepLubricant := DI Water\n")
-      f.write("strRecipeStepPad := 70 Duro Violet\n")
-      f.write("strRecipeStepDescription1 := Final Polish\n")
-      f.write("rRecipeStepSpeedRampDn := 1\n")
-      f.write("rRecipeStepPressureRampDn := 1\n")
+    write_step(
+      DOMAILLE_ROOT,
+      default,
+      1,
+      _default_step_data(25, 15, 5, "Brown 5um", "Rough Polish", "Geometry"),
+    )
+    write_step(
+      DOMAILLE_ROOT,
+      default,
+      2,
+      _default_step_data(35, 12, 5, "Purple 1um", "Medium Polish"),
+    )
+    write_step(
+      DOMAILLE_ROOT,
+      default,
+      3,
+      _default_step_data(35, 12, 3, "Clear FOS-22", "Final Polish"),
+    )
 
 
   except Exception as e:
@@ -115,7 +105,7 @@ def Menu():
 def ListRecipes():
 # get a list of recipes from Domaille/Processes/
   try:
-    recipeList = os.listdir("Domaille/Processes/")
+    recipeList = os.listdir(f"{DOMAILLE_ROOT}/Processes/")
     recipeList.remove('Steps')
   except Exception as e:
     raise e
@@ -139,27 +129,29 @@ def ViewRecipe():
 
   # Get the main recipe process:
   try:
-    with open(f'Domaille/Processes/{recipeName}', 'r') as f:
-      recipe=f.readlines()
+    recipe_data = read_recipe(DOMAILLE_ROOT, recipeName)
   except Exception as e:
     print('ERROR', e)
     return
 
   cwd = os.getcwd()
-  print(f'{cwd}\\Domaille\\Processes\\{recipeName}')
-  for line in recipe:
+  print(f'{cwd}\\{DOMAILLE_ROOT}\\Processes\\{recipeName}')
+  for line in serialize_kv_lines(recipe_data):
     print(line, end="")
-    # get the number of steps from the recipe as we go through it:
-    if line.startswith("intRecipeNoOfSteps"):
-      recipeNoOfSteps = int(line.strip()[-1:]) # this will bug if >=10 steps!
+
+  try:
+    recipeNoOfSteps = int(recipe_data["intRecipeNoOfSteps"])
+  except Exception as e:
+    print(f"ERROR: Invalid step count in recipe file: {e}")
+    return
 
   # Get each step of the recipe:  
   print()
   for step in range(1, recipeNoOfSteps+1):
     print(f"STEP #{step}:")
     try:
-      with open(f'Domaille/Processes/Steps/default.00{step}', 'r') as f:
-        print(f.read())
+      step_data = read_step(DOMAILLE_ROOT, recipeName, step)
+      print("".join(serialize_kv_lines(step_data)))
     except Exception as e:
       print(f"ERROR: Could not find file for Step #{step}")
       print(e)
@@ -172,7 +164,7 @@ def NewRecipe():
   if not recipeName:
     print("Invalid recipe name.")
     return
-  if os.path.exists(f"Domaille/Processes/{recipeName}"):
+  if os.path.exists(f"{DOMAILLE_ROOT}/Processes/{recipeName}"):
     print("Recipe name already exists. Recipe creation cancelled")
     return
 
@@ -198,11 +190,16 @@ def NewRecipe():
 
   # generate the base recipe file:
   try:
-    with open(f'Domaille/Processes/{recipeName}', 'w') as f:
-      f.write(f"strRecipeDescription := {recipeName}\n")
-      f.write(f"intRecipeNoOfSteps := {steps}\n")
-      f.write(f"intRecipeQty := {qty}\n")
-      f.write(f"intRecipeReworkStep := 1\n")
+    write_recipe(
+      DOMAILLE_ROOT,
+      recipeName,
+      {
+        "strRecipeDescription": recipeName,
+        "intRecipeNoOfSteps": steps,
+        "intRecipeQty": qty,
+        "intRecipeReworkStep": 1,
+      },
+    )
   except Exception as e:
     print("ERROR", e)
     return
@@ -245,15 +242,21 @@ def NewRecipe():
 
     # time and pressure are now set. Build the recipe and write to file:
     try:
-      with open(f'Domaille/Processes/Steps/{recipeName}.00{step}', 'w') as f:
-        f.write(f"rRecipeStepTime := {time}\n")
-        f.write("rRecipeStepSpeed := 110\n")
-        f.write("rRecipeStepSpeedRamp := 1\n")
-        f.write(f"rRecipeStepPressure := {pressure}\n")
-        f.write("rRecipeStepPressureRamp := 1\n")
-        f.write("rRecipeStepFCI := 5\n")
-        f.write("rRecipeStepSpeedRampDn := 1\n")
-        f.write("rRecipeStepPressureRampDn := 1\n")
+      write_step(
+        DOMAILLE_ROOT,
+        recipeName,
+        step,
+        {
+          "rRecipeStepTime": time,
+          "rRecipeStepSpeed": 110,
+          "rRecipeStepSpeedRamp": 1,
+          "rRecipeStepPressure": pressure,
+          "rRecipeStepPressureRamp": 1,
+          "rRecipeStepFCI": 5,
+          "rRecipeStepSpeedRampDn": 1,
+          "rRecipeStepPressureRampDn": 1,
+        },
+      )
     except Exception as e:
       print(f"ERROR while writing recipe step {step} to file: {e}.")
       raise e
@@ -266,7 +269,7 @@ def main():
   print()
   print("Offline Recipe Generator for Domaille APM-HDC-5320\n")
   # check for file structure
-  if os.path.isdir('Domaille/Processes/Steps'):
+  if os.path.isdir(f'{DOMAILLE_ROOT}/Processes/Steps'):
     print('Domaille path found in current working directory:')
     print(os.getcwd())
   else:
