@@ -101,7 +101,6 @@
         <button id="saveBtn">Save</button>
         <button id="deleteBtn">Delete</button>
       </div>
-      <pre id="statusBox" class="status"></pre>
       </section>
 
       <div class="side-stack side-right">
@@ -137,7 +136,6 @@
           <div class="row">
             <button id="saveSettingsBtn">Save Settings</button>
           </div>
-          <pre id="settingsStatusBox" class="status"></pre>
         </section>
 
         <section class="panel card">
@@ -166,6 +164,19 @@
         </section>
       </div>
     </main>
+
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="confirmModal" class="modal-overlay" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+        <h3 id="confirmTitle">Please Confirm</h3>
+        <p id="confirmMessage">Are you sure?</p>
+        <div class="modal-actions">
+          <button type="button" id="confirmCancelBtn" class="secondary-btn">Cancel</button>
+          <button type="button" id="confirmOkBtn">Confirm</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="/static/app.js"></script>

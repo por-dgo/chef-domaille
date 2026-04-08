@@ -9,17 +9,63 @@ const state = {
 
 function el(id) { return document.getElementById(id); }
 
+function showToast(message, isError = false, timeoutMs = 3400) {
+  const container = el("toastContainer");
+  if (!container) return;
+  const toast = document.createElement("div");
+  toast.className = `toast ${isError ? "toast-error" : "toast-ok"}`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  window.setTimeout(() => {
+    toast.remove();
+  }, timeoutMs);
+}
+
 function status(msg, isError = false) {
-  const box = el("statusBox");
-  box.textContent = msg;
-  box.style.color = isError ? "#ff9e9e" : "#c7ffd4";
+  showToast(msg, isError);
 }
 
 function settingsStatus(msg, isError = false) {
-  const box = el("settingsStatusBox");
-  if (!box) return;
-  box.textContent = msg;
-  box.style.color = isError ? "#ff9e9e" : "#c7ffd4";
+  showToast(msg, isError);
+}
+
+function confirmDialog(message) {
+  const overlay = el("confirmModal");
+  const messageBox = el("confirmMessage");
+  const okBtn = el("confirmOkBtn");
+  const cancelBtn = el("confirmCancelBtn");
+  if (!overlay || !messageBox || !okBtn || !cancelBtn) {
+    return Promise.resolve(window.confirm(message));
+  }
+
+  overlay.hidden = false;
+  messageBox.textContent = message;
+  okBtn.focus();
+
+  return new Promise((resolve) => {
+    const close = (result) => {
+      overlay.hidden = true;
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      overlay.removeEventListener("click", onOverlay);
+      document.removeEventListener("keydown", onEscape);
+      resolve(result);
+    };
+
+    const onOk = () => close(true);
+    const onCancel = () => close(false);
+    const onOverlay = (event) => {
+      if (event.target === overlay) close(false);
+    };
+    const onEscape = (event) => {
+      if (event.key === "Escape") close(false);
+    };
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    overlay.addEventListener("click", onOverlay);
+    document.addEventListener("keydown", onEscape);
+  });
 }
 
 function setActiveTab(tabName) {
@@ -113,16 +159,56 @@ function uniqueValues(items) {
   return result;
 }
 
+function reorderList(list, fromIndex, toIndex) {
+  const next = [...list];
+  const [moved] = next.splice(fromIndex, 1);
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
 function renderOptionChips(kind) {
   const idPrefix = kind.toLowerCase();
   const container = el(`${idPrefix}OptionList`);
   if (!container) return;
   container.innerHTML = "";
   const values = state.consumables[kind] || [];
-  for (const value of values) {
+  values.forEach((value, index) => {
     const chip = document.createElement("span");
     chip.className = "chip";
+    chip.draggable = true;
+    chip.dataset.index = String(index);
     chip.textContent = value;
+
+    chip.addEventListener("dragstart", (event) => {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", String(index));
+      chip.classList.add("chip-dragging");
+    });
+
+    chip.addEventListener("dragend", () => {
+      chip.classList.remove("chip-dragging");
+      container.querySelectorAll(".chip-drop-target").forEach((node) => node.classList.remove("chip-drop-target"));
+    });
+
+    chip.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      chip.classList.add("chip-drop-target");
+    });
+
+    chip.addEventListener("dragleave", () => {
+      chip.classList.remove("chip-drop-target");
+    });
+
+    chip.addEventListener("drop", (event) => {
+      event.preventDefault();
+      chip.classList.remove("chip-drop-target");
+      const fromIndex = Number.parseInt(event.dataTransfer.getData("text/plain"), 10);
+      const toIndex = index;
+      if (!Number.isInteger(fromIndex) || fromIndex === toIndex) return;
+      state.consumables[kind] = reorderList(state.consumables[kind] || [], fromIndex, toIndex);
+      renderOptionChips(kind);
+      populateSelectDropdowns();
+    });
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
@@ -137,7 +223,7 @@ function renderOptionChips(kind) {
 
     chip.appendChild(removeBtn);
     container.appendChild(chip);
-  }
+  });
 }
 
 function addOption(kind) {
@@ -379,7 +465,8 @@ async function saveRecipe() {
 async function deleteRecipe() {
   const name = el("recipeName").value.trim();
   if (!name) return;
-  if (!confirm(`Delete recipe ${name}?`)) return;
+  const confirmed = await confirmDialog(`Delete recipe ${name}?`);
+  if (!confirmed) return;
   await api(`/api/recipes/${encodeURIComponent(name)}`, "DELETE");
   state.bundle = null;
   state.selectedRecipe = null;

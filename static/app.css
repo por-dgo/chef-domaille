@@ -234,6 +234,21 @@ button:hover {
   border-radius: 999px;
   padding: 0.2rem 0.55rem;
   font-size: 0.8rem;
+  cursor: grab;
+  user-select: none;
+}
+
+.chip:active {
+  cursor: grabbing;
+}
+
+.chip-dragging {
+  opacity: 0.45;
+}
+
+.chip-drop-target {
+  outline: 2px dashed #66a7b2;
+  outline-offset: 2px;
 }
 
 .chip-remove {
@@ -252,13 +267,77 @@ button:hover {
   border: 1px solid #cdd8e2;
 }
 
-.status {
-  background: #10161d;
-  color: #c7ffd4;
-  border-radius: 10px;
-  padding: 0.5rem;
-  min-height: 72px;
+.toast-container {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 1100;
+  width: min(360px, calc(100vw - 1.2rem));
+}
+
+.toast {
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  color: #fff;
+  box-shadow: 0 8px 22px rgba(19, 35, 45, 0.18);
+  animation: toast-slide 180ms ease-out;
   white-space: pre-wrap;
+}
+
+.toast-ok {
+  background: linear-gradient(180deg, #2f7f6a, #246555);
+}
+
+.toast-error {
+  background: linear-gradient(180deg, #b64352, #8f3340);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(19, 30, 40, 0.4);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 1200;
+}
+
+.modal-card {
+  width: min(420px, calc(100vw - 1.2rem));
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(12, 25, 34, 0.22);
+  padding: 1rem;
+}
+
+.modal-card h3 {
+  margin: 0 0 0.55rem;
+}
+
+.modal-card p {
+  margin: 0 0 0.8rem;
+  color: #3a4955;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@keyframes toast-slide {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 1300px) {
