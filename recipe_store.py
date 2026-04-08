@@ -96,9 +96,12 @@ class RecipeStore:
             if not self.settings_path.exists():
                 defaults = {
                     "Max Quantity": ["72"],
-                    "Film": ["<None>", "Brown 5um", "Purple 1um", "Clear FOS-22"],
-                    "Pad": ["<None>", "60 Duro Blue", "65 Duro Dark Blue", "70 Duro Violet", 
-                            "75 Duro Brown", "80 Duro Green", "85 Duro Gray", "90 Duro Black"],
+                    "Film": ["<None>", "Orange 16um", "Brown 5um", "Purple 1um",
+                             "Green 0.1um", "Clear FOS-22", "White Undercut",
+                             "White Protrusion"],
+                    "Pad": ["<None>", "60 Duro Blue", "65 Duro Dark Blue",
+                            "70 Duro Violet", "75 Duro Brown", "80 Duro Green",
+                            "85 Duro Gray", "90 Duro Black"],
                     "Lubricant": ["<None>", "DI Water"],
                 }
                 settings = RecipeSettings(self.settings_path)
