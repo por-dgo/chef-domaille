@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, render_template, request
 
 from recipe_store import RecipeBundle, RecipeStore
 from recipe_validation import PROFILE_5316_5320, validate_bundle
@@ -23,6 +22,10 @@ def create_app(store_root: Path | None = None) -> Flask:
     app = Flask(__name__)
     store = RecipeStore(store_root or RecipeStore.default_root())
     store.ensure_structure()
+
+    @app.get("/")
+    def home():
+        return render_template("index.html")
 
     @app.get("/api/health")
     def health():

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chef Domaille - Virtual Polisher</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Chef Domaille</h1>
+    <p>Virtual Polisher Console (Machine Memory + Transfer Media)</p>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Recipes (Machine Memory)</h2>
+      <div class="row">
+        <button id="newRecipeBtn">New Recipe</button>
+        <button id="refreshBtn">Refresh</button>
+      </div>
+      <ul id="recipeList" class="recipe-list"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Editor</h2>
+      <div class="row grid2">
+        <label>Recipe Name<input id="recipeName" /></label>
+        <label>Description<input id="recipeDescription" /></label>
+      </div>
+      <div class="row grid3">
+        <label>Steps<input id="recipeSteps" type="number" min="1" max="20" /></label>
+        <label>Qty<input id="recipeQty" type="number" min="2" max="32" /></label>
+        <label>Rework Start<input id="recipeRework" type="number" min="1" /></label>
+      </div>
+
+      <h3>Step Editor</h3>
+      <div class="step-nav">
+        <button id="stepPrevBtn">Prev</button>
+        <span id="stepLabel">Step 1</span>
+        <button id="stepNextBtn">Next</button>
+      </div>
+
+      <h4>Tab A (Time / Speed / Pressure)</h4>
+      <div class="row grid4">
+        <label>Time (s)<input id="stepTime" type="number" min="10" max="300"></label>
+        <label>Speed (RPM)<input id="stepSpeed" type="number" min="0"></label>
+        <label>Speed Ramp Up (s)<input id="stepSpeedRamp" type="number" min="0" max="60"></label>
+        <label>Pressure (lbs)<input id="stepPressure" type="number" min="0" max="16" step="0.1"></label>
+      </div>
+      <div class="row grid3">
+        <label>Pressure Ramp Up (s)<input id="stepPressureRamp" type="number" min="0" max="60"></label>
+        <label>Speed Ramp Down (s)<input id="stepSpeedRampDn" type="number" min="0" max="60"></label>
+        <label>Pressure Ramp Down (s)<input id="stepPressureRampDn" type="number" min="0" max="60"></label>
+      </div>
+
+      <h4>Tab B (Consumables)</h4>
+      <div class="row grid4">
+        <label>Film<input id="stepFilm"></label>
+        <label>Pad<input id="stepPad"></label>
+        <label>Lubricant<input id="stepLubricant"></label>
+        <label>FCI<input id="stepFCI" type="number" min="0" max="99"></label>
+      </div>
+      <div class="row grid2">
+        <label>Step Note 1<input id="stepNote1"></label>
+        <label>Step Note 2<input id="stepNote2"></label>
+      </div>
+
+      <h4>Tab C (Advanced)</h4>
+      <div class="row grid4">
+        <label>Lower Speed Limit<input id="stepLowerSpeed" type="number" min="0"></label>
+        <label>Upper Speed Limit<input id="stepUpperSpeed" type="number" min="0"></label>
+        <label>Lower Pressure Limit<input id="stepLowerPressure" type="number" min="0" step="0.1"></label>
+        <label>Upper Pressure Limit<input id="stepUpperPressure" type="number" min="0" step="0.1"></label>
+      </div>
+      <div class="row grid2">
+        <label>Fixture Weight<input id="stepFixtureWeight" type="number" min="0" step="0.1"></label>
+        <label>OpCode<input id="stepOpCode" type="number" min="0"></label>
+      </div>
+
+      <div class="row">
+        <button id="saveBtn">Save</button>
+        <button id="deleteBtn">Delete</button>
+      </div>
+      <pre id="statusBox" class="status"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Transfer Media (USB / ZIP)</h2>
+      <p>Select recipes from list, then transfer to thumb drive path or ZIP.</p>
+
+      <div class="row grid2">
+        <label>Thumb Import Path<input id="thumbImportPath" placeholder="E:/Domaille"></label>
+        <label>Thumb Export Path<input id="thumbExportPath" placeholder="E:/Domaille"></label>
+      </div>
+      <div class="row">
+        <button id="importThumbBtn">Import Selected From Thumb</button>
+        <button id="exportThumbBtn">Export Selected To Thumb</button>
+      </div>
+
+      <div class="row grid2">
+        <label>ZIP Import Path<input id="zipImportPath" placeholder="C:/temp/recipes.zip"></label>
+        <label>ZIP Export Path<input id="zipExportPath" placeholder="C:/temp/recipes.zip"></label>
+      </div>
+      <div class="row">
+        <button id="importZipBtn">Import Selected From ZIP</button>
+        <button id="exportZipBtn">Export Selected To ZIP</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
