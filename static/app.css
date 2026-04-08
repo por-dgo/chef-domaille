@@ -201,6 +201,57 @@ button:hover {
   color: #2a3946;
 }
 
+.settings-group {
+  margin-bottom: 0.75rem;
+}
+
+.settings-label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.3rem;
+}
+
+.chip-input-row {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  min-height: 1.6rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #ecf6f7;
+  border: 1px solid #c9e3e6;
+  color: #1f4252;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: #1f4252;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.secondary-btn {
+  background: #e7edf2;
+  color: #274154;
+  border: 1px solid #cdd8e2;
+}
+
 .status {
   background: #10161d;
   color: #c7ffd4;

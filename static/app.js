@@ -99,26 +99,105 @@ function setSelectValue(id, value) {
   select.value = safeValue;
 }
 
+function uniqueValues(items) {
+  const seen = new Set();
+  const result = [];
+  for (const raw of items || []) {
+    const value = String(raw || "").trim();
+    if (!value) continue;
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(value);
+  }
+  return result;
+}
+
+function renderOptionChips(kind) {
+  const idPrefix = kind.toLowerCase();
+  const container = el(`${idPrefix}OptionList`);
+  if (!container) return;
+  container.innerHTML = "";
+  const values = state.consumables[kind] || [];
+  for (const value of values) {
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = value;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "chip-remove";
+    removeBtn.textContent = "x";
+    removeBtn.setAttribute("aria-label", `Remove ${value}`);
+    removeBtn.addEventListener("click", () => {
+      state.consumables[kind] = values.filter((item) => item !== value);
+      renderOptionChips(kind);
+      populateSelectDropdowns();
+    });
+
+    chip.appendChild(removeBtn);
+    container.appendChild(chip);
+  }
+}
+
+function addOption(kind) {
+  const idPrefix = kind.toLowerCase();
+  const input = el(`${idPrefix}OptionInput`);
+  if (!input) return;
+  const next = input.value.trim();
+  if (!next) return;
+  const merged = [...(state.consumables[kind] || []), next];
+  state.consumables[kind] = uniqueValues(merged);
+  input.value = "";
+  renderOptionChips(kind);
+  populateSelectDropdowns();
+}
+
 function loadSettingsEditor() {
-  el("filmOptions").value = (state.consumables.Film || []).join(", ");
-  el("padOptions").value = (state.consumables.Pad || []).join(", ");
-  el("lubricantOptions").value = (state.consumables.Lubricant || []).join(", ");
+  state.consumables = {
+    Film: uniqueValues(state.consumables.Film || []),
+    Pad: uniqueValues(state.consumables.Pad || []),
+    Lubricant: uniqueValues(state.consumables.Lubricant || []),
+  };
+  renderOptionChips("Film");
+  renderOptionChips("Pad");
+  renderOptionChips("Lubricant");
 }
 
 async function saveSettings() {
   try {
     const consumables = {
-      Film: el("filmOptions").value.split(",").map(s => s.trim()).filter(s => s),
-      Pad: el("padOptions").value.split(",").map(s => s.trim()).filter(s => s),
-      Lubricant: el("lubricantOptions").value.split(",").map(s => s.trim()).filter(s => s),
+      Film: uniqueValues(state.consumables.Film || []),
+      Pad: uniqueValues(state.consumables.Pad || []),
+      Lubricant: uniqueValues(state.consumables.Lubricant || []),
     };
     await api("/api/settings/consumables", "PUT", consumables);
     state.consumables = consumables;
     populateSelectDropdowns();
+    loadSettingsEditor();
     settingsStatus("Settings saved!");
   } catch (e) {
     settingsStatus(e.message, true);
   }
+}
+
+function wireSettingsEditor() {
+  ["Film", "Pad", "Lubricant"].forEach((kind) => {
+    const idPrefix = kind.toLowerCase();
+    const addBtn = el(`add${kind}OptionBtn`);
+    const input = el(`${idPrefix}OptionInput`);
+    if (addBtn) {
+      addBtn.addEventListener("click", () => addOption(kind));
+    }
+    if (input) {
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          addOption(kind);
+        }
+      });
+    }
+  });
 }
 
 function defaultStep() {
@@ -376,6 +455,7 @@ function wireEvents() {
 
 wireEvents();
 wireTabs();
+wireSettingsEditor();
 loadConsumables().catch(e => settingsStatus(e.message, true));
 refreshRecipes().catch(e => status(e.message, true));
 newRecipe();

@@ -110,20 +110,29 @@
             <h2>Settings</h2>
             <span class="panel-sub">Machine Configuration</span>
           </div>
-          <div class="row">
-            <label>Film Options
-              <textarea id="filmOptions" placeholder="Enter comma-separated values"></textarea>
-            </label>
+          <div class="settings-group">
+            <label class="settings-label" for="filmOptionInput">Film Options</label>
+            <div class="chip-input-row">
+              <input id="filmOptionInput" placeholder="Add film option" />
+              <button type="button" id="addFilmOptionBtn" class="secondary-btn">Add</button>
+            </div>
+            <div id="filmOptionList" class="chip-list" aria-live="polite"></div>
           </div>
-          <div class="row">
-            <label>Pad Options
-              <textarea id="padOptions" placeholder="Enter comma-separated values"></textarea>
-            </label>
+          <div class="settings-group">
+            <label class="settings-label" for="padOptionInput">Pad Options</label>
+            <div class="chip-input-row">
+              <input id="padOptionInput" placeholder="Add pad option" />
+              <button type="button" id="addPadOptionBtn" class="secondary-btn">Add</button>
+            </div>
+            <div id="padOptionList" class="chip-list" aria-live="polite"></div>
           </div>
-          <div class="row">
-            <label>Lubricant Options
-              <textarea id="lubricantOptions" placeholder="Enter comma-separated values"></textarea>
-            </label>
+          <div class="settings-group">
+            <label class="settings-label" for="lubricantOptionInput">Lubricant Options</label>
+            <div class="chip-input-row">
+              <input id="lubricantOptionInput" placeholder="Add lubricant option" />
+              <button type="button" id="addLubricantOptionBtn" class="secondary-btn">Add</button>
+            </div>
+            <div id="lubricantOptionList" class="chip-list" aria-live="polite"></div>
           </div>
           <div class="row">
             <button id="saveSettingsBtn">Save Settings</button>
