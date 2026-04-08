@@ -29,26 +29,26 @@ This mapping is based on the currently implemented file format in `recipe.py` an
 | Contact quantity / max quantity | `intRecipeQty` and `Settings.txt: Max Quantity` | `intRecipeQty` currently validated 2-72; practical fixture max should be 32 contacts | For 5320/5316 operations, set project max to 32 contacts in future validation update |
 | Rework step | `intRecipeReworkStep` | Usually keep default as `1` (optionally `2`) | Defines which step machine jumps to when operator presses Rework; low-priority feature for this team |
 | Step duration | `rRecipeStepTime` | Validated 10-300 seconds in current CLI | Confirm manual-recommended range by recipe type |
-| Platen/head speed | `rRecipeStepSpeed` | Defaults to 110 in current generated files | Units and model-specific limits need confirmation from manual tables |
-| Speed ramp up | `rRecipeStepSpeedRamp` | Defaults to 1 | Controls speed ramp-in at step start (and/or ramp duration, depending on machine software/firmware support) |
+| Platen/head speed | `rRecipeStepSpeed` | Defaults to 110 in current generated files | Speed in RPM per manual. Zero is valid when "Zero Speed" system config option is enabled. |
+| Speed ramp up | `rRecipeStepSpeedRamp` | Defaults to 1 | Seconds to ramp from 0 RPM to programmed speed at step start. Max 60 seconds per manual. |
 | Pressure (total load) | `rRecipeStepPressure` | Validated 0-16 lbs in current CLI | Keep 16 lbs max for 5320/5316 usage (approximately 0.5 lbs/contact at 32 contacts) |
-| Pressure ramp up | `rRecipeStepPressureRamp` | Defaults to 1 | Controls pressure ramp-in at step start (and/or ramp duration, depending on machine software/firmware support) |
-| FCI parameter | `rRecipeStepFCI` | Default currently set in script but should be non-user-facing | FCI = Film Change Interval; operators decide film replacement by visual wear in practice |
+| Pressure ramp up | `rRecipeStepPressureRamp` | Defaults to 1 | Seconds to ramp from 0 to programmed pressure at step start. Max 60 seconds per manual. |
+| FCI parameter | `rRecipeStepFCI` | Default currently set in script but should be non-user-facing | FCI = Film Change Interval; machine tracks film uses and stops next step when count reached. Max 99. In practice, operators at DGO change film by visual inspection, so this is non-user-facing in our UI. |
 | Speed tolerance limits | `rRecipeStepLowerSpeedLimit`, `rRecipeStepUpperSpeedLimit` | Defaults 10 and 10 | Limit interpretation needs manual confirmation |
 | Pressure tolerance limits | `rRecipeStepLowerPressureLimit`, `rRecipeStepUpperPressureLimit` | Defaults 0.5 and 0.5 | Units and pass/fail behavior need confirmation |
 | Fixture weight | `rRecipeStepFixtureWeight` | Defaults to 0 | May be optional or machine-dependent |
-| Operation code | `intRecipeStepOpCode` | Defaults to 300 in current files | Keep constant until machine behavior is confirmed; no reliable inference yet |
+| Operation code | `intRecipeStepOpCode` | Defaults to 300 in current files | Used only with DE DataLink® data collection accessory. Any integer valid. No impact on polishing behavior. |
 | Consumable: film | `strRecipeStepFilm`, `Settings.txt: Film` | Selected from configured film list | Keep exact string values for compatibility |
 | Consumable: lubricant | `strRecipeStepLubricant`, `Settings.txt: Lubricant` | Default DI Water | Keep exact string values for compatibility |
 | Consumable: pad | `strRecipeStepPad`, `Settings.txt: Pad` | Default 70 Duro Violet | Keep exact string values for compatibility |
 | Step description fields | `strRecipeStepDescription1`, `strRecipeStepDescription2` | Optional descriptive text for operator context | Secondary description not always present |
-| Speed ramp down | `rRecipeStepSpeedRampDn` | Defaults to 1 | Controls speed ramp-out at step end to ease out of polishing |
-| Pressure ramp down | `rRecipeStepPressureRampDn` | Defaults to 1 | Controls pressure ramp-out at step end to ease out of polishing |
+| Speed ramp down | `rRecipeStepSpeedRampDn` | Defaults to 1 | Seconds to ramp from max speed to stopped at step end. |
+| Pressure ramp down | `rRecipeStepPressureRampDn` | Defaults to 1 | Seconds to ramp from max pressure to zero at step end. |
 
 ## Known Unknowns (Flagged)
 
-- `intRecipeStepOpCode`: valid code set and model-specific behavior (project currently uses 300).
-- Exact machine handling for `rRecipeStepFCI` when set to 0, blank, or non-default values.
+- `intRecipeStepOpCode`: used exclusively with DE DataLink® data collection system accessory; no polishing impact. Any integer is valid. Project uses 300 as a safe default.
+- `rRecipeStepFCI` when set to 0: assumed to disable film tracking. Exact machine behavior when field is missing (vs 0) is unconfirmed.
 - Speed/pressure limit fields (`Lower/Upper*Limit`): exact machine behavior (alarm threshold, tolerance band, or control loop bound).
 - Ramp fields (`*Ramp`, `*RampDn`): exact units may vary by machine software/firmware version; unsupported fields may be ignored by some machines.
 
