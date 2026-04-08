@@ -8,6 +8,7 @@ from pathlib import Path
 from flask import Flask, jsonify, render_template, request
 
 from recipe_store import RecipeBundle, RecipeStore
+from recipe_settings import RecipeSettings
 from recipe_validation import PROFILE_5316_5320, validate_bundle
 
 
@@ -109,6 +110,33 @@ def create_app(store_root: Path | None = None) -> Flask:
     @app.get("/api/profiles/current")
     def profile():
         return jsonify(PROFILE_5316_5320)
+
+    @app.get("/api/settings/consumables")
+    def get_consumables():
+        settings = RecipeSettings(store.settings_path)
+        consumables = settings.get_consumables()
+        return jsonify(consumables)
+
+    @app.put("/api/settings/consumables")
+    def update_consumables():
+        payload = request.get_json(force=True)
+        settings = RecipeSettings(store.settings_path)
+        # payload should be like: {"Film": [...], "Pad": [...], "Lubricant": [...]}
+        settings.set_consumables(payload)
+        return jsonify({"ok": True})
+
+    @app.get("/api/settings")
+    def get_settings():
+        settings = RecipeSettings(store.settings_path)
+        all_settings = settings.read_settings()
+        return jsonify(all_settings)
+
+    @app.put("/api/settings")
+    def update_settings():
+        payload = request.get_json(force=True)
+        settings = RecipeSettings(store.settings_path)
+        settings.write_settings(payload)
+        return jsonify({"ok": True})
 
     return app
 

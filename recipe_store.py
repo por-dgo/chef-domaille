@@ -9,6 +9,7 @@ from typing import Iterable
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from recipe_io import get_recipe_path, get_step_path, read_recipe, read_step, write_recipe, write_step
+from recipe_settings import RecipeSettings
 
 
 APP_NAME = "Chef Domaille"
@@ -83,15 +84,17 @@ class RecipeStore:
         
         self._bootstrapping = True
         try:
-            # Create default Settings.txt
+            # Create default Settings.txt with CSV format
             if not self.settings_path.exists():
-                settings_content = "\n".join([
-                    "strMachineProfile := 5316",
-                    "strLanguage := English",
-                    "strDefaultUnit := Inches",
-                    "",
-                ])
-                self.settings_path.write_text(settings_content, encoding="utf-8")
+                defaults = {
+                    "Max Quantity": ["72"],
+                    "Film": ["<None>", "Brown 5µm", "Purple 1µm", "Clear FOS-22"],
+                    "Pad": ["<None>", "60 Duro Blue", "65 Duro Dark Blue", "70 Duro Violet", 
+                            "75 Duro Brown", "80 Duro Green", "85 Duro Gray", "90 Duro Black"],
+                    "Lubricant": ["<None>", "DI Water", "DI Water + Isopropanol"],
+                }
+                settings = RecipeSettings(self.settings_path)
+                settings.write_settings(defaults)
             
             # Create default "Sample" recipe (use internal save to avoid re-bootstrapping)
             sample_recipe = RecipeBundle(
@@ -135,9 +138,9 @@ class RecipeStore:
                         "rRecipeStepUpperPressureLimit": "14",
                         "rRecipeStepFixtureWeight": "2.5",
                         "intRecipeStepOpCode": "310",
-                        "strRecipeStepFilm": "Red 1µm",
+                        "strRecipeStepFilm": "Purple 1µm",
                         "strRecipeStepLubricant": "DI Water + Isopropanol",
-                        "strRecipeStepPad": "90 Duro White",
+                        "strRecipeStepPad": "90 Duro Black",
                         "rRecipeStepSpeedRampDn": "1",
                         "rRecipeStepPressureRampDn": "1",
                     },

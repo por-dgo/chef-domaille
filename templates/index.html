@@ -56,9 +56,9 @@
 
       <h4>Tab B (Consumables)</h4>
       <div class="row grid4">
-        <label>Film<input id="stepFilm"></label>
-        <label>Pad<input id="stepPad"></label>
-        <label>Lubricant<input id="stepLubricant"></label>
+        <label>Film<select id="stepFilm"></select></label>
+        <label>Pad<select id="stepPad"></select></label>
+        <label>Lubricant<select id="stepLubricant"></select></label>
         <label>FCI<input id="stepFCI" type="number" min="0" max="99"></label>
       </div>
       <div class="row grid2">
@@ -83,6 +83,32 @@
         <button id="deleteBtn">Delete</button>
       </div>
       <pre id="statusBox" class="status"></pre>
+    </section>
+
+    <section class="panel">
+      <h2>Settings (Machine Configuration)</h2>
+      <p>Manage available consumables and machine settings.</p>
+      
+      <h3>Consumables</h3>
+      <div class="row">
+        <label>Film Options
+          <textarea id="filmOptions" placeholder="Enter comma-separated values" style="width: 100%; height: 60px;"></textarea>
+        </label>
+      </div>
+      <div class="row">
+        <label>Pad Options
+          <textarea id="padOptions" placeholder="Enter comma-separated values" style="width: 100%; height: 60px;"></textarea>
+        </label>
+      </div>
+      <div class="row">
+        <label>Lubricant Options
+          <textarea id="lubricantOptions" placeholder="Enter comma-separated values" style="width: 100%; height: 60px;"></textarea>
+        </label>
+      </div>
+      <div class="row">
+        <button id="saveSettingsBtn">Save Settings</button>
+      </div>
+      <pre id="settingsStatusBox" class="status"></pre>
     </section>
 
     <section class="panel">
