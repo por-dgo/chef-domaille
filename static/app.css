@@ -1,21 +1,21 @@
 :root {
   color-scheme: light dark;
-  --bg-top: #f4f7fb;
-  --bg-bottom: #e8eef7;
-  --surface: rgba(255, 255, 255, 0.88);
+  --bg-top: #eef3f9;
+  --bg-bottom: #e7edf5;
+  --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: #ffffff;
-  --ink: #0f172a;
-  --muted: #5b687c;
-  --line: #d6ddeb;
+  --ink: #111827;
+  --muted: #667085;
+  --line: #d7deea;
   --accent: #2563eb;
-  --accent-strong: #1d4ed8;
-  --accent-soft: #e8efff;
-  --chip-bg: #edf3ff;
-  --chip-line: #c9d9ff;
+  --accent-strong: #1f5de2;
+  --accent-soft: #ecf2ff;
+  --chip-bg: #f0f4ff;
+  --chip-line: #ccdafc;
   --chip-ink: #1f3f83;
   --ok: #15803d;
   --error: #b4232d;
-  --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  --shadow: 0 8px 24px rgba(31, 41, 55, 0.08);
 }
 
 @supports (color: AccentColor) {
@@ -30,9 +30,9 @@
 
 body {
   margin: 0;
-  font-family: "Segoe UI Variable", "Segoe UI", "Trebuchet MS", sans-serif;
+  font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
   color: var(--ink);
-  background: radial-gradient(1200px 520px at 12% -8%, rgba(37, 99, 235, 0.16), transparent 60%),
+  background: radial-gradient(1200px 520px at 12% -8%, rgba(37, 99, 235, 0.08), transparent 60%),
               linear-gradient(165deg, var(--bg-top), var(--bg-bottom));
 }
 
@@ -44,21 +44,22 @@ body {
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(14px) saturate(1.15);
 }
 
 .topbar {
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.9), rgba(240, 246, 255, 0.9));
+  background: rgba(255, 255, 255, 0.75);
 }
 
 .topbar h1 {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   letter-spacing: 0.01em;
+  font-weight: 650;
 }
 
 .topbar p {
@@ -96,7 +97,7 @@ body {
 }
 
 .editor-card {
-  background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .side-stack {
@@ -130,9 +131,9 @@ textarea {
   width: 100%;
   padding: 0.5rem 0.58rem;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   min-width: 100px;
-  background: var(--surface-strong);
+  background: rgba(255, 255, 255, 0.92);
   color: var(--ink);
   accent-color: var(--accent);
 }
@@ -152,10 +153,10 @@ textarea {
 
 button {
   border: none;
-  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  background: var(--accent);
   color: #fff;
-  padding: 0.5rem 0.86rem;
-  border-radius: 10px;
+  padding: 0.48rem 0.82rem;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   transition: transform 120ms ease, filter 120ms ease;
@@ -176,7 +177,7 @@ button:hover {
 
 .recipe-list li {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   padding: 0.4rem;
   margin-bottom: 0.45rem;
   display: flex;
@@ -205,23 +206,23 @@ button:hover {
 }
 
 .tab-btn {
-  background: #eef2fa;
-  color: #33435b;
+  background: #f3f6fb;
+  color: #334155;
   border: 1px solid var(--line);
 }
 
 .tab-btn.active {
-  background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+  background: var(--accent);
   color: #fff;
   border-color: transparent;
 }
 
 .tab-panel {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   padding: 0.65rem;
   margin-bottom: 0.7rem;
-  background: var(--surface-strong);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .tab-panel h4 {
@@ -290,8 +291,8 @@ button:hover {
 }
 
 .secondary-btn {
-  background: #edf2fb;
-  color: #24405f;
+  background: #eef3f9;
+  color: #334155;
   border: 1px solid var(--line);
 }
 
@@ -316,11 +317,11 @@ button:hover {
 }
 
 .toast-ok {
-  background: linear-gradient(180deg, color-mix(in oklab, var(--ok) 82%, white), var(--ok));
+  background: var(--ok);
 }
 
 .toast-error {
-  background: linear-gradient(180deg, color-mix(in oklab, var(--error) 82%, white), var(--error));
+  background: var(--error);
 }
 
 .modal-overlay {
@@ -341,7 +342,7 @@ button:hover {
   width: min(420px, calc(100vw - 1.2rem));
   background: var(--surface-strong);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 12px;
   box-shadow: 0 14px 30px rgba(12, 25, 34, 0.22);
   padding: 1rem;
 }
@@ -374,22 +375,22 @@ button:hover {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-top: #0e1525;
-    --bg-bottom: #0b111d;
-    --surface: rgba(17, 25, 40, 0.86);
-    --surface-strong: #131d2f;
-    --ink: #e4eaf4;
-    --muted: #9ba9be;
-    --line: #27354d;
-    --accent-soft: rgba(37, 99, 235, 0.2);
-    --chip-bg: rgba(59, 130, 246, 0.18);
-    --chip-line: #355483;
-    --chip-ink: #dbe9ff;
-    --shadow: 0 16px 34px rgba(0, 0, 0, 0.35);
+    --bg-top: #0f1726;
+    --bg-bottom: #0b1220;
+    --surface: rgba(17, 24, 39, 0.8);
+    --surface-strong: #131b2c;
+    --ink: #e5ecf7;
+    --muted: #9eabc1;
+    --line: #2a374d;
+    --accent-soft: rgba(37, 99, 235, 0.22);
+    --chip-bg: rgba(59, 130, 246, 0.16);
+    --chip-line: #39557f;
+    --chip-ink: #d9e6ff;
+    --shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
   }
 
   .topbar {
-    background: linear-gradient(120deg, rgba(19, 30, 47, 0.92), rgba(20, 36, 62, 0.92));
+    background: rgba(19, 30, 47, 0.8);
   }
 
   .tab-btn {
