@@ -248,6 +248,13 @@ class RecipeStore:
             ]
             incoming = RecipeBundle(recipe_name, recipe_data, steps)
 
+            # Validate before importing
+            from recipe_validation import validate_bundle
+            result = validate_bundle(incoming)
+            if not result.ok:
+                skipped.append(recipe_name)
+                continue
+
             if recipe_name not in existing_recipes:
                 self.save_bundle(incoming)
                 added.append(recipe_name)
