@@ -3,14 +3,18 @@ const state = {
   selectedRecipe: null,
   bundle: null,
   currentStepIndex: 0,
-  selectedForTransfer: new Set(),
+  dirty: false,
+  savedSnapshot: null,
+  exportMode: false,
+  exportSelected: new Set(),
   consumables: { Film: [], Pad: [], Lubricant: [] },
+  savedConsumables: null,
   removableDrives: [],
 };
 
 function el(id) { return document.getElementById(id); }
 
-function showToast(message, isError = false, timeoutMs = 3400) {
+function showToast(message, isError = false, timeoutMs = 4500) {
   const container = el("toastContainer");
   if (!container) return;
   const toast = document.createElement("div");
@@ -24,6 +28,42 @@ function showToast(message, isError = false, timeoutMs = 3400) {
 
 function status(msg, isError = false) {
   showToast(msg, isError);
+}
+
+function showImportToasts(data) {
+  const added = data.added || [];
+  const updated = data.updated || [];
+  const settingsAdded = data.settings_added || {};
+  const messages = [];
+  const allChanged = [...added.map((n) => `New recipe: ${n}`), ...updated.map((n) => `Updated recipe: ${n}`)];
+
+  if (allChanged.length === 0) {
+    messages.push("No changes \u2014 all recipes already up to date.");
+  } else if (allChanged.length <= 6) {
+    messages.push(...allChanged);
+  } else {
+    const names = [...added, ...updated];
+    messages.push(`Imported ${names.length} recipes: ${names.join(", ")}`);
+  }
+
+  const settingsParts = [];
+  for (const [category, values] of Object.entries(settingsAdded)) {
+    if (values.length) {
+      const quoted = values.map((v) => `"${v}"`).join(", ");
+      settingsParts.push(`${category}: added ${quoted}`);
+    }
+  }
+  if (settingsParts.length) {
+    messages.push(`Settings \u2014 ${settingsParts.join("; ")}`);
+  }
+
+  // Longer timeout for bulk summary so there's time to read the list
+  const total = added.length + updated.length;
+  const timeout = total > 6 ? 4500 + total * 250 : undefined;
+
+  messages.forEach((msg, i) => {
+    window.setTimeout(() => showToast(msg, false, timeout), i * 100);
+  });
 }
 
 function settingsStatus(msg, isError = false) {
@@ -70,54 +110,123 @@ function confirmDialog(message) {
 }
 
 function getSelectedRecipeNames() {
-  const selected = Array.from(state.selectedForTransfer.values());
-  if (selected.length > 0) return selected;
+  if (state.exportMode) return Array.from(state.exportSelected);
   if (state.selectedRecipe) return [state.selectedRecipe];
   return [];
 }
 
-function closeTransferModal() {
-  const overlay = el("transferModal");
-  if (overlay) overlay.hidden = true;
+function snapshotBundle() {
+  if (!state.bundle) return null;
+  return JSON.stringify({
+    recipe_name: state.bundle.recipe_name,
+    recipe_data: state.bundle.recipe_data,
+    steps: state.bundle.steps,
+  });
 }
 
-function renderTransferSelectedInfo() {
-  const box = el("transferSelectedInfo");
-  if (!box) return;
-  const selected = getSelectedRecipeNames();
-  if (selected.length === 0) {
-    box.textContent = "No explicit selection: export book defaults to all recipes.";
-    return;
+function checkDirty() {
+  if (!state.bundle) { setDirty(false); return; }
+  bindCurrentStepInputs();
+  updateBundleFromHeader();
+  const current = snapshotBundle();
+  setDirty(current !== state.savedSnapshot);
+}
+
+function setDirty(isDirty) {
+  state.dirty = isDirty;
+  const saveBtn = el("saveBtn");
+  const resetBtn = el("resetBtn");
+  if (saveBtn) saveBtn.disabled = !isDirty;
+  if (resetBtn) resetBtn.disabled = !isDirty;
+  updateEditorSubtitle();
+}
+
+function showEditor() {
+  const placeholder = el("editorPlaceholder");
+  const body = el("editorBody");
+  if (placeholder) placeholder.hidden = true;
+  if (body) body.hidden = false;
+}
+
+function hideEditor() {
+  const placeholder = el("editorPlaceholder");
+  const body = el("editorBody");
+  if (placeholder) placeholder.hidden = false;
+  if (body) body.hidden = true;
+  state.bundle = null;
+  state.selectedRecipe = null;
+  setDirty(false);
+  updateEditorSubtitle();
+}
+
+function toggleSettings() {
+  const btn = el("settingsToggleBtn");
+  const body = el("settingsBody");
+  if (!btn || !body) return;
+  const expanded = btn.getAttribute("aria-expanded") === "true";
+  btn.setAttribute("aria-expanded", String(!expanded));
+  btn.title = expanded ? "Expand settings" : "Collapse settings";
+  body.hidden = expanded;
+  const section = body.closest(".collapsible-panel");
+  if (section) section.classList.toggle("collapsed", expanded);
+}
+
+function closeAccordions() {
+  const exp = el("exportAccordion");
+  const imp = el("importAccordion");
+  if (exp) exp.hidden = true;
+  if (imp) imp.hidden = true;
+  if (state.exportMode) {
+    state.exportMode = false;
+    state.exportSelected.clear();
+    refreshRecipes();
   }
-  box.textContent = `Selected recipes (${selected.length}): ${selected.join(", ")}`;
 }
 
-function renderRemovableHint() {
-  const row = el("removableHintRow");
-  if (!row) return;
-  if (!state.removableDrives.length) {
-    row.textContent = "No removable drives detected. You can still enter a path manually.";
-    return;
-  }
-  row.textContent = `Removable drives detected: ${state.removableDrives.join(", ")}`;
+function renderDriveHints() {}
+
+function refreshExportUi() {
+  const type = el("exportTypeSelect")?.value || "book";
+  const thumbRow = el("exportThumbRow");
+  const bookRow = el("exportBookRow");
+  if (thumbRow) thumbRow.hidden = type !== "thumb";
+  if (bookRow) bookRow.hidden = type !== "book";
 }
 
-function refreshTransferModalUi() {
-  const action = el("transferActionSelect").value;
-  const type = el("transferTypeSelect").value;
+function refreshImportUi() {
+  const type = el("importTypeSelect")?.value || "book";
+  const thumbRow = el("importThumbRow");
+  const bookRow = el("importBookRow");
+  if (thumbRow) thumbRow.hidden = type !== "thumb";
+  if (bookRow) bookRow.hidden = type !== "book";
+}
 
-  const thumbRow = el("thumbPathRow");
-  const bookFileRow = el("bookFileRow");
-  const bookNameRow = el("bookNameRow");
-  if (!thumbRow || !bookFileRow || !bookNameRow) return;
+function prefillDrivePaths() {
+  if (!state.removableDrives.length) return;
+  const drive = state.removableDrives[0];
+  const exportPath = el("exportThumbPath");
+  const importPath = el("importThumbPath");
+  if (exportPath && !exportPath.value) exportPath.value = drive;
+  if (importPath && !importPath.value) importPath.value = drive;
+}
 
-  const isThumb = type === "thumb";
-  thumbRow.hidden = !isThumb;
-  bookFileRow.hidden = !(type === "book" && action === "import");
-  bookNameRow.hidden = !(type === "book" && action === "export");
+function openExportAccordion() {
+  closeAccordions();
+  state.exportMode = true;
+  state.exportSelected = new Set(state.recipes);
+  loadRemovableDrives().then(() => { renderDriveHints(); prefillDrivePaths(); });
+  refreshExportUi();
+  refreshRecipes();
+  const acc = el("exportAccordion");
+  if (acc) acc.hidden = false;
+}
 
-  renderTransferSelectedInfo();
-  renderRemovableHint();
+function openImportAccordion() {
+  closeAccordions();
+  loadRemovableDrives().then(() => { renderDriveHints(); prefillDrivePaths(); });
+  refreshImportUi();
+  const acc = el("importAccordion");
+  if (acc) acc.hidden = false;
 }
 
 async function loadRemovableDrives() {
@@ -127,30 +236,6 @@ async function loadRemovableDrives() {
   } catch {
     state.removableDrives = [];
   }
-}
-
-async function openTransferModal(defaultAction) {
-  await loadRemovableDrives();
-  const overlay = el("transferModal");
-  if (!overlay) return;
-  el("transferActionSelect").value = defaultAction;
-  refreshTransferModalUi();
-  overlay.hidden = false;
-}
-
-async function pickDirectoryPath() {
-  if (window.showDirectoryPicker) {
-    try {
-      const dir = await window.showDirectoryPicker();
-      if (dir?.name) {
-        const driveMatch = state.removableDrives.find((d) => d.toLowerCase().startsWith(dir.name.toLowerCase()));
-        if (driveMatch) return driveMatch;
-      }
-    } catch {
-      return null;
-    }
-  }
-  return null;
 }
 
 async function downloadRecipeBook(selectedRecipes, fileName) {
@@ -198,31 +283,37 @@ async function downloadRecipeBook(selectedRecipes, fileName) {
   URL.revokeObjectURL(objectUrl);
 }
 
-async function runTransferModal() {
-  const action = el("transferActionSelect").value;
-  const type = el("transferTypeSelect").value;
-  const selected = getSelectedRecipeNames();
+async function runExport() {
+  const type = el("exportTypeSelect").value;
 
-  if (type === "thumb" && action === "export") {
-    const destination = el("transferThumbPath").value.trim();
-    if (!destination) throw new Error("Thumb export folder path is required");
+  if (type === "thumb") {
+    const destination = el("exportThumbPath").value.trim();
+    if (!destination) throw new Error("Folder path is required");
     await transfer("/api/transfer/export/thumb", {
       destination_path: destination,
-      selected_recipes: selected,
+      selected_recipes: getSelectedRecipeNames(),
     });
-  } else if (type === "thumb" && action === "import") {
-    const source = el("transferThumbPath").value.trim();
-    if (!source) throw new Error("Thumb import folder path is required");
-    await transfer("/api/transfer/import/thumb", {
+  } else {
+    await downloadRecipeBook(getSelectedRecipeNames(), el("exportBookName").value);
+    status("Recipe book exported");
+  }
+  closeAccordions();
+}
+
+async function runImport() {
+  const type = el("importTypeSelect").value;
+  let data;
+
+  if (type === "thumb") {
+    const source = el("importThumbPath").value.trim();
+    if (!source) throw new Error("Folder path is required");
+    data = await api("/api/transfer/import/thumb", "POST", {
       source_path: source,
-      selected_recipes: selected,
+      selected_recipes: [],
       overwrite: true,
     });
-  } else if (type === "book" && action === "export") {
-    await downloadRecipeBook(selected, el("transferBookName").value);
-    status("Recipe book export complete");
-  } else if (type === "book" && action === "import") {
-    const fileInput = el("transferBookFile");
+  } else {
+    const fileInput = el("importBookFile");
     const file = fileInput?.files?.[0];
     if (!file) throw new Error("Select a .chef file to import");
     const formData = new FormData();
@@ -231,15 +322,16 @@ async function runTransferModal() {
       method: "POST",
       body: formData,
     });
-    const data = await response.json();
+    data = await response.json();
     if (!response.ok || !data.ok) {
-      throw new Error(data.error || "Recipe book import failed");
+      throw new Error(data.error || "Import failed");
     }
-    await refreshRecipes();
-    status(`Copied: ${data.copied.join(", ") || "(none)"}\nSkipped: ${data.skipped.join(", ") || "(none)"}`);
   }
 
-  closeTransferModal();
+  await refreshRecipes();
+  await loadConsumables();
+  showImportToasts(data);
+  closeAccordions();
 }
 
 function setActiveTab(tabName) {
@@ -283,8 +375,10 @@ async function loadConsumables() {
   try {
     const data = await api("/api/settings/consumables");
     state.consumables = data;
-    populateSelectDropdowns();
     loadSettingsEditor();
+    state.savedConsumables = JSON.stringify(state.consumables);
+    populateSelectDropdowns();
+    updateSettingsSubtitle();
   } catch (e) {
     console.error("Failed to load consumables:", e);
   }
@@ -292,31 +386,55 @@ async function loadConsumables() {
 
 function populateSelectDropdowns() {
   for (const [category, options] of Object.entries(state.consumables)) {
-    const selectId = `step${category}`;
-    const select = el(selectId);
-    if (!select) continue;
-    select.innerHTML = "";
+    const combo = el(`combo${category}`);
+    if (!combo) continue;
+    const list = combo.querySelector(".combo-list");
+    if (!list) continue;
+    list.innerHTML = "";
     for (const opt of options) {
-      const option = document.createElement("option");
-      option.value = opt;
-      option.textContent = opt;
-      select.appendChild(option);
+      const li = document.createElement("li");
+      li.textContent = opt;
+      li.addEventListener("mousedown", (e) => {
+        e.preventDefault(); // keep focus on input
+        const input = combo.querySelector("input");
+        input.value = opt;
+        list.hidden = true;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      list.appendChild(li);
     }
   }
 }
 
 function setSelectValue(id, value) {
-  const select = el(id);
-  if (!select) return;
-  const safeValue = value || "";
-  const exists = Array.from(select.options).some((option) => option.value === safeValue);
-  if (!exists && safeValue) {
-    const dynamicOption = document.createElement("option");
-    dynamicOption.value = safeValue;
-    dynamicOption.textContent = `${safeValue} (custom)`;
-    select.appendChild(dynamicOption);
+  const input = el(id);
+  if (!input) return;
+  input.value = value || "";
+}
+
+function wireComboBoxes() {
+  for (const category of ["Film", "Pad", "Lubricant"]) {
+    const combo = el(`combo${category}`);
+    if (!combo) continue;
+    const input = combo.querySelector("input");
+    const toggle = combo.querySelector(".combo-toggle");
+    const list = combo.querySelector(".combo-list");
+
+    const showList = () => { list.hidden = false; };
+    const hideList = () => { list.hidden = true; };
+
+    toggle.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      if (list.hidden) { showList(); input.focus(); }
+      else { hideList(); }
+    });
+
+    input.addEventListener("focus", showList);
+    input.addEventListener("blur", () => {
+      // Small delay so mousedown on li fires first
+      setTimeout(hideList, 150);
+    });
   }
-  select.value = safeValue;
 }
 
 function uniqueValues(items) {
@@ -382,6 +500,7 @@ function renderOptionChips(kind) {
       state.consumables[kind] = reorderList(state.consumables[kind] || [], fromIndex, toIndex);
       renderOptionChips(kind);
       populateSelectDropdowns();
+      updateSettingsSubtitle();
     });
 
     const removeBtn = document.createElement("button");
@@ -393,6 +512,7 @@ function renderOptionChips(kind) {
       state.consumables[kind] = values.filter((item) => item !== value);
       renderOptionChips(kind);
       populateSelectDropdowns();
+      updateSettingsSubtitle();
     });
 
     chip.appendChild(removeBtn);
@@ -411,6 +531,7 @@ function addOption(kind) {
   input.value = "";
   renderOptionChips(kind);
   populateSelectDropdowns();
+  updateSettingsSubtitle();
 }
 
 function loadSettingsEditor() {
@@ -433,12 +554,22 @@ async function saveSettings() {
     };
     await api("/api/settings/consumables", "PUT", consumables);
     state.consumables = consumables;
+    state.savedConsumables = JSON.stringify(state.consumables);
     populateSelectDropdowns();
     loadSettingsEditor();
+    updateSettingsSubtitle();
     settingsStatus("Settings saved!");
   } catch (e) {
     settingsStatus(e.message, true);
   }
+}
+
+function updateSettingsSubtitle() {
+  const sub = el("settingsSubtitle");
+  if (!sub) return;
+  if (!state.savedConsumables) { sub.textContent = ""; return; }
+  const current = JSON.stringify(state.consumables);
+  sub.textContent = current !== state.savedConsumables ? "Edited" : "";
 }
 
 function wireSettingsEditor() {
@@ -497,21 +628,13 @@ function bindCurrentStepInputs() {
   step.strRecipeStepFilm = el("stepFilm").value;
   step.strRecipeStepPad = el("stepPad").value;
   step.strRecipeStepLubricant = el("stepLubricant").value;
-  step.rRecipeStepFCI = el("stepFCI").value;
   step.strRecipeStepDescription1 = el("stepNote1").value;
   step.strRecipeStepDescription2 = el("stepNote2").value;
-  step.rRecipeStepLowerSpeedLimit = el("stepLowerSpeed").value;
-  step.rRecipeStepUpperSpeedLimit = el("stepUpperSpeed").value;
-  step.rRecipeStepLowerPressureLimit = el("stepLowerPressure").value;
-  step.rRecipeStepUpperPressureLimit = el("stepUpperPressure").value;
-  step.rRecipeStepFixtureWeight = el("stepFixtureWeight").value;
-  step.intRecipeStepOpCode = el("stepOpCode").value;
 }
 
 function renderCurrentStep() {
   if (!state.bundle) return;
   const step = state.bundle.steps[state.currentStepIndex];
-  el("stepLabel").textContent = `Step ${state.currentStepIndex + 1}`;
   el("stepTime").value = step.rRecipeStepTime || "";
   el("stepSpeed").value = step.rRecipeStepSpeed || "";
   el("stepSpeedRamp").value = step.rRecipeStepSpeedRamp || "";
@@ -522,15 +645,9 @@ function renderCurrentStep() {
   setSelectValue("stepFilm", step.strRecipeStepFilm || "");
   setSelectValue("stepPad", step.strRecipeStepPad || "");
   setSelectValue("stepLubricant", step.strRecipeStepLubricant || "");
-  el("stepFCI").value = step.rRecipeStepFCI || "0";
   el("stepNote1").value = step.strRecipeStepDescription1 || "";
   el("stepNote2").value = step.strRecipeStepDescription2 || "";
-  el("stepLowerSpeed").value = step.rRecipeStepLowerSpeedLimit || "";
-  el("stepUpperSpeed").value = step.rRecipeStepUpperSpeedLimit || "";
-  el("stepLowerPressure").value = step.rRecipeStepLowerPressureLimit || "";
-  el("stepUpperPressure").value = step.rRecipeStepUpperPressureLimit || "";
-  el("stepFixtureWeight").value = step.rRecipeStepFixtureWeight || "";
-  el("stepOpCode").value = step.intRecipeStepOpCode || "";
+  renderStepTabs();
 }
 
 function updateBundleFromHeader() {
@@ -538,24 +655,91 @@ function updateBundleFromHeader() {
   state.bundle.recipe_name = el("recipeName").value.trim();
   state.bundle.recipe_data.strRecipeDescription = el("recipeDescription").value;
   state.bundle.recipe_data.intRecipeQty = el("recipeQty").value;
-  state.bundle.recipe_data.intRecipeReworkStep = el("recipeRework").value;
-
-  const requestedSteps = parseInt(el("recipeSteps").value || "1", 10);
-  while (state.bundle.steps.length < requestedSteps) state.bundle.steps.push(defaultStep());
-  while (state.bundle.steps.length > requestedSteps) state.bundle.steps.pop();
   state.bundle.recipe_data.intRecipeNoOfSteps = String(state.bundle.steps.length);
-  if (state.currentStepIndex > state.bundle.steps.length - 1) {
-    state.currentStepIndex = state.bundle.steps.length - 1;
-  }
 }
 
 function renderBundleHeader() {
   if (!state.bundle) return;
   el("recipeName").value = state.bundle.recipe_name;
   el("recipeDescription").value = state.bundle.recipe_data.strRecipeDescription || "";
-  el("recipeSteps").value = String(state.bundle.steps.length);
   el("recipeQty").value = state.bundle.recipe_data.intRecipeQty || "";
-  el("recipeRework").value = state.bundle.recipe_data.intRecipeReworkStep || "1";
+}
+
+function updateEditorSubtitle() {
+  const sub = el("editorSubtitle");
+  if (!sub) return;
+  if (!state.bundle) { sub.textContent = ""; return; }
+  const name = state.bundle.recipe_name || "Untitled";
+  const dirty = state.dirty ? " \u2022 Edited" : "";
+  sub.textContent = `${name}${dirty}`;
+}
+
+function renderStepTabs() {
+  const container = el("stepTabs");
+  if (!container || !state.bundle) return;
+  container.innerHTML = "";
+  const canRemove = state.bundle.steps.length > 1;
+  state.bundle.steps.forEach((_, i) => {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.className = `step-tab${i === state.currentStepIndex ? " active" : ""}`;
+    tab.setAttribute("role", "tab");
+    tab.setAttribute("aria-selected", i === state.currentStepIndex ? "true" : "false");
+
+    const label = document.createElement("span");
+    label.textContent = `Step ${i + 1}`;
+    tab.appendChild(label);
+
+    if (canRemove) {
+      const closeBtn = document.createElement("span");
+      closeBtn.className = "step-tab-close";
+      closeBtn.textContent = "\u00d7";
+      closeBtn.setAttribute("aria-label", `Remove step ${i + 1}`);
+      closeBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        removeStep(i);
+      });
+      tab.appendChild(closeBtn);
+    }
+
+    tab.addEventListener("click", () => switchToStep(i));
+    container.appendChild(tab);
+  });
+}
+
+function switchToStep(index) {
+  if (!state.bundle) return;
+  bindCurrentStepInputs();
+  state.currentStepIndex = Math.max(0, Math.min(index, state.bundle.steps.length - 1));
+  renderCurrentStep();
+}
+
+function addStep() {
+  if (!state.bundle) return;
+  if (state.bundle.steps.length >= 10) {
+    showToast("Maximum 10 steps", true);
+    return;
+  }
+  bindCurrentStepInputs();
+  state.bundle.steps.push(defaultStep());
+  state.bundle.recipe_data.intRecipeNoOfSteps = String(state.bundle.steps.length);
+  state.currentStepIndex = state.bundle.steps.length - 1;
+  renderCurrentStep();
+  checkDirty();
+}
+
+async function removeStep(index) {
+  if (!state.bundle || state.bundle.steps.length <= 1) return;
+  const confirmed = await confirmDialog(`Remove Step ${index + 1}?`);
+  if (!confirmed) return;
+  bindCurrentStepInputs();
+  state.bundle.steps.splice(index, 1);
+  state.bundle.recipe_data.intRecipeNoOfSteps = String(state.bundle.steps.length);
+  if (state.currentStepIndex >= state.bundle.steps.length) {
+    state.currentStepIndex = state.bundle.steps.length - 1;
+  }
+  renderCurrentStep();
+  checkDirty();
 }
 
 async function refreshRecipes() {
@@ -565,22 +749,33 @@ async function refreshRecipes() {
   list.innerHTML = "";
   for (const name of state.recipes) {
     const li = document.createElement("li");
-    if (name === state.selectedRecipe) li.classList.add("active");
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = state.selectedForTransfer.has(name);
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) state.selectedForTransfer.add(name);
-      else state.selectedForTransfer.delete(name);
-    });
+    if (state.exportMode) {
+      const isChecked = state.exportSelected.has(name);
+      li.classList.toggle("export-selected", isChecked);
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = isChecked;
+      cb.addEventListener("change", () => {
+        if (cb.checked) state.exportSelected.add(name);
+        else state.exportSelected.delete(name);
+        li.classList.toggle("export-selected", cb.checked);
+      });
+      const span = document.createElement("span");
+      span.textContent = name;
+      li.appendChild(cb);
+      li.appendChild(span);
+      li.addEventListener("click", (e) => {
+        if (e.target === cb) return;
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event("change"));
+      });
+    } else {
+      if (name === state.selectedRecipe) li.classList.add("active");
+      li.textContent = name;
+      li.addEventListener("click", () => loadRecipe(name));
+    }
 
-    const button = document.createElement("button");
-    button.textContent = name;
-    button.addEventListener("click", () => loadRecipe(name));
-
-    li.appendChild(checkbox);
-    li.appendChild(button);
     list.appendChild(li);
   }
 }
@@ -594,10 +789,12 @@ async function loadRecipe(name) {
     steps: data.steps,
   };
   state.currentStepIndex = 0;
+  state.savedSnapshot = snapshotBundle();
+  showEditor();
   renderBundleHeader();
   renderCurrentStep();
+  setDirty(false);
   refreshRecipes();
-  status(`Loaded ${name}`);
 }
 
 function newRecipe() {
@@ -613,9 +810,11 @@ function newRecipe() {
   };
   state.selectedRecipe = null;
   state.currentStepIndex = 0;
+  state.savedSnapshot = null;
+  showEditor();
   renderBundleHeader();
   renderCurrentStep();
-  status("New recipe draft created");
+  setDirty(true);
 }
 
 async function saveRecipe() {
@@ -627,11 +826,30 @@ async function saveRecipe() {
     status("Recipe name is required", true);
     return;
   }
+  // Ensure hidden fields have defaults
+  const defaults = defaultStep();
+  const hiddenKeys = [
+    "rRecipeStepFCI", "rRecipeStepLowerSpeedLimit", "rRecipeStepUpperSpeedLimit",
+    "rRecipeStepLowerPressureLimit", "rRecipeStepUpperPressureLimit",
+    "rRecipeStepFixtureWeight", "intRecipeStepOpCode",
+    "strRecipeStepDescription1", "strRecipeStepDescription2",
+  ];
+  for (const step of state.bundle.steps) {
+    for (const key of hiddenKeys) {
+      if (!(key in step) || step[key] === undefined || step[key] === null) step[key] = defaults[key] || "";
+    }
+  }
+  // Ensure recipe-level defaults
+  if (!state.bundle.recipe_data.intRecipeReworkStep) {
+    state.bundle.recipe_data.intRecipeReworkStep = "1";
+  }
   await api(`/api/recipes/${encodeURIComponent(name)}`, "PUT", {
     recipe_data: state.bundle.recipe_data,
     steps: state.bundle.steps,
   });
   state.selectedRecipe = name;
+  state.savedSnapshot = snapshotBundle();
+  setDirty(false);
   await refreshRecipes();
   status(`Saved ${name}`);
 }
@@ -642,10 +860,20 @@ async function deleteRecipe() {
   const confirmed = await confirmDialog(`Delete recipe ${name}?`);
   if (!confirmed) return;
   await api(`/api/recipes/${encodeURIComponent(name)}`, "DELETE");
-  state.bundle = null;
-  state.selectedRecipe = null;
+  hideEditor();
   await refreshRecipes();
   status(`Deleted ${name}`);
+}
+
+async function resetRecipe() {
+  if (!state.selectedRecipe) return;
+  await loadRecipe(state.selectedRecipe);
+  status("Recipe reset to saved state");
+}
+
+function cancelRecipe() {
+  hideEditor();
+  refreshRecipes();
 }
 
 function selectedRecipes() {
@@ -658,53 +886,34 @@ async function transfer(action, payload) {
   status(`Copied: ${result.copied.join(", ") || "(none)"}\nSkipped: ${result.skipped.join(", ") || "(none)"}`);
 }
 
+function wireEditorInputs() {
+  const editorBody = el("editorBody");
+  if (!editorBody) return;
+  editorBody.addEventListener("input", () => checkDirty());
+  editorBody.addEventListener("change", () => checkDirty());
+}
+
 function wireEvents() {
-  el("newRecipeBtn").addEventListener("click", newRecipe);
-  el("refreshBtn").addEventListener("click", refreshRecipes);
+  el("placeholderNewBtn").addEventListener("click", newRecipe);
   el("saveBtn").addEventListener("click", () => saveRecipe().catch(e => status(e.message, true)));
+  el("resetBtn").addEventListener("click", () => resetRecipe().catch(e => status(e.message, true)));
+  el("cancelBtn").addEventListener("click", cancelRecipe);
   el("deleteBtn").addEventListener("click", () => deleteRecipe().catch(e => status(e.message, true)));
-  el("importBtn").addEventListener("click", () => openTransferModal("import").catch(e => status(e.message, true)));
-  el("exportBtn").addEventListener("click", () => openTransferModal("export").catch(e => status(e.message, true)));
-
-  el("stepPrevBtn").addEventListener("click", () => {
-    if (!state.bundle) return;
-    bindCurrentStepInputs();
-    state.currentStepIndex = Math.max(0, state.currentStepIndex - 1);
-    renderCurrentStep();
+  el("settingsHead").addEventListener("click", (e) => {
+    if (e.target.closest("button:not(.panel-toggle)")) return;
+    toggleSettings();
   });
+  el("settingsToggleBtn").addEventListener("click", (e) => { e.stopPropagation(); toggleSettings(); });
+  el("importBtn").addEventListener("click", openImportAccordion);
+  el("exportBtn").addEventListener("click", openExportAccordion);
+  el("addStepBtn").addEventListener("click", addStep);
 
-  el("stepNextBtn").addEventListener("click", () => {
-    if (!state.bundle) return;
-    bindCurrentStepInputs();
-    state.currentStepIndex = Math.min(state.bundle.steps.length - 1, state.currentStepIndex + 1);
-    renderCurrentStep();
-  });
-
-  el("transferCancelBtn").addEventListener("click", closeTransferModal);
-  el("transferRunBtn").addEventListener("click", () => runTransferModal().catch(e => status(e.message, true)));
-  el("transferActionSelect").addEventListener("change", refreshTransferModalUi);
-  el("transferTypeSelect").addEventListener("change", refreshTransferModalUi);
-
-  el("transferBrowseDirBtn").addEventListener("click", async () => {
-    const picked = await pickDirectoryPath();
-    if (picked) {
-      el("transferThumbPath").value = picked;
-      return;
-    }
-    if (state.removableDrives.length) {
-      el("transferThumbPath").value = state.removableDrives[0];
-    }
-  });
-
-  el("transferSuggestDriveBtn").addEventListener("click", () => {
-    if (!state.removableDrives.length) {
-      status("No removable drives detected", true);
-      return;
-    }
-    el("transferThumbPath").value = state.removableDrives[0];
-    el("transferTypeSelect").value = "thumb";
-    refreshTransferModalUi();
-  });
+  el("exportTypeSelect").addEventListener("change", refreshExportUi);
+  el("exportRunBtn").addEventListener("click", () => runExport().catch(e => status(e.message, true)));
+  el("exportCancelBtn").addEventListener("click", closeAccordions);
+  el("importTypeSelect").addEventListener("change", refreshImportUi);
+  el("importRunBtn").addEventListener("click", () => runImport().catch(e => status(e.message, true)));
+  el("importCancelBtn").addEventListener("click", closeAccordions);
 
   const saveSettingsBtn = el("saveSettingsBtn");
   if (saveSettingsBtn) {
@@ -715,6 +924,7 @@ function wireEvents() {
 wireEvents();
 wireTabs();
 wireSettingsEditor();
+wireEditorInputs();
+wireComboBoxes();
 loadConsumables().catch(e => settingsStatus(e.message, true));
 refreshRecipes().catch(e => status(e.message, true));
-newRecipe();

@@ -3,144 +3,214 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Chef Domaille - Virtual Polisher</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍳</text></svg>">
+  <title>Chef Domaille</title>
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
   <div class="page-bg">
     <header class="topbar card">
-      <h1>Chef Domaille</h1>
-      <p>Virtual Polisher Console (Machine Memory + Transfer Media)</p>
+      <div class="topbar-row">
+        <span class="topbar-icon" aria-hidden="true">🍳</span>
+        <div>
+          <h1>Chef Domaille</h1>
+          <p>Polisher recipe manager for the APM-HDC-5320</p>
+        </div>
+      </div>
     </header>
 
     <main class="layout">
-      <section class="panel card side-card side-left">
-        <div class="panel-head">
-          <h2>Recipes</h2>
-          <span class="panel-sub">Machine Memory</span>
-        </div>
-        <div class="row">
-          <button id="newRecipeBtn">New Recipe</button>
-          <button id="refreshBtn">Refresh</button>
-        </div>
-        <ul id="recipeList" class="recipe-list"></ul>
-      </section>
+      <div class="side-stack side-left">
+        <section class="panel card side-card collapsible-panel collapsed">
+          <div class="panel-head" id="settingsHead" style="cursor:pointer">
+            <h2>Machine Settings</h2>
+            <span id="settingsSubtitle" class="panel-sub"></span>
+            <button type="button" id="settingsToggleBtn" class="panel-toggle" aria-expanded="false" aria-controls="settingsBody" title="Expand settings">&#9654;</button>
+          </div>
+          <div id="settingsBody" class="collapsible-body" hidden>
+            <div class="settings-group">
+              <label class="settings-label" for="filmOptionInput">Film Options</label>
+              <div class="chip-input-row">
+                <input id="filmOptionInput" placeholder="Add film option" />
+                <button type="button" id="addFilmOptionBtn" class="secondary-btn">Add</button>
+              </div>
+              <div id="filmOptionList" class="chip-list" aria-live="polite"></div>
+            </div>
+            <div class="settings-group">
+              <label class="settings-label" for="padOptionInput">Pad Options</label>
+              <div class="chip-input-row">
+                <input id="padOptionInput" placeholder="Add pad option" />
+                <button type="button" id="addPadOptionBtn" class="secondary-btn">Add</button>
+              </div>
+              <div id="padOptionList" class="chip-list" aria-live="polite"></div>
+            </div>
+            <div class="settings-group">
+              <label class="settings-label" for="lubricantOptionInput">Lubricant Options</label>
+              <div class="chip-input-row">
+                <input id="lubricantOptionInput" placeholder="Add lubricant option" />
+                <button type="button" id="addLubricantOptionBtn" class="secondary-btn">Add</button>
+              </div>
+              <div id="lubricantOptionList" class="chip-list" aria-live="polite"></div>
+            </div>
+            <div class="row">
+              <button id="saveSettingsBtn">Save Settings</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel card side-card">
+          <div class="panel-head">
+            <h2>Recipes</h2>
+          </div>
+          <div class="row">
+            <button id="importBtn" class="secondary-btn">Import</button>
+            <button id="exportBtn" class="secondary-btn">Export</button>
+          </div>
+
+          <div id="exportAccordion" hidden>
+            <div class="accordion-body">
+              <h4>Export Recipes</h4>
+              <p class="accordion-hint">Click recipes below to select/deselect.</p>
+              <label>Type
+                <select id="exportTypeSelect">
+                  <option value="book">Recipe Book (.chef)</option>
+                  <option value="thumb">Thumb Drive Folder</option>
+                </select>
+              </label>
+              <div id="exportThumbRow" hidden>
+                <label>Folder Path<input id="exportThumbPath" placeholder="F:\Domaille"></label>
+              </div>
+              <div id="exportBookRow">
+                <label>File Name<input id="exportBookName" value="recipe-book.chef"></label>
+              </div>
+              <div class="row">
+                <button id="exportRunBtn">Export</button>
+                <button id="exportCancelBtn" class="secondary-btn">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="importAccordion" hidden>
+            <div class="accordion-body">
+              <h4>Import Recipes</h4>
+              <label>Type
+                <select id="importTypeSelect">
+                  <option value="book">Recipe Book (.chef)</option>
+                  <option value="thumb">Thumb Drive Folder</option>
+                </select>
+              </label>
+              <div id="importThumbRow" hidden>
+                <label>Folder Path<input id="importThumbPath" placeholder="F:\Domaille"></label>
+              </div>
+              <div id="importBookRow">
+                <label>Recipe Book File<input id="importBookFile" type="file" accept=".chef"></label>
+              </div>
+              <div class="row">
+                <button id="importRunBtn">Import</button>
+                <button id="importCancelBtn" class="secondary-btn">Cancel</button>
+              </div>
+            </div>
+          </div>
+
+          <ul id="recipeList" class="recipe-list"></ul>
+        </section>
+      </div>
 
       <section class="panel card editor-card">
         <div class="panel-head">
           <h2>Recipe Editor</h2>
-          <span class="panel-sub">Primary Workspace</span>
+          <span id="editorSubtitle" class="panel-sub"></span>
         </div>
-      <div class="row grid2">
-        <label>Recipe Name<input id="recipeName" /></label>
-        <label>Description<input id="recipeDescription" /></label>
-      </div>
-      <div class="row grid3">
-        <label>Steps<input id="recipeSteps" type="number" min="1" max="20" /></label>
-        <label>Qty<input id="recipeQty" type="number" min="2" max="32" /></label>
-        <label>Rework Start<input id="recipeRework" type="number" min="1" /></label>
+        <div id="editorPlaceholder" class="editor-placeholder">
+          <span class="placeholder-icon" aria-hidden="true">🍳</span>
+          <p>Select a recipe from the list, or create a new one.</p>
+          <button id="placeholderNewBtn" type="button">New Recipe</button>
+        </div>
+        <div id="editorBody" hidden>
+
+      <!-- Recipe metadata -->
+      <div class="recipe-meta">
+        <div class="row grid2">
+          <label>Recipe Name<input id="recipeName" /></label>
+          <label>Description<input id="recipeDescription" /></label>
+        </div>
+        <div class="row grid1">
+          <label>Qty<input id="recipeQty" type="number" min="2" max="32" /></label>
+        </div>
       </div>
 
-      <h3>Step Editor</h3>
-      <div class="step-nav">
-        <button id="stepPrevBtn">Prev</button>
-        <span id="stepLabel">Step 1</span>
-        <button id="stepNextBtn">Next</button>
+      <!-- Step tabs (browser-tab style) -->
+      <div class="step-tab-bar">
+        <div id="stepTabs" class="step-tabs" role="tablist" aria-label="Recipe Steps"></div>
+        <button type="button" id="addStepBtn" class="step-tab-add" title="Add step" aria-label="Add step">+</button>
       </div>
 
+      <!-- Category tabs within current step -->
       <div class="tab-strip" role="tablist" aria-label="Step Categories">
-        <button class="tab-btn active" id="tabMotionBtn" data-tab="motion" role="tab" aria-selected="true">Motion & Pressure</button>
-        <button class="tab-btn" id="tabConsumablesBtn" data-tab="consumables" role="tab" aria-selected="false">Consumables & Notes</button>
-        <button class="tab-btn" id="tabAdvancedBtn" data-tab="advanced" role="tab" aria-selected="false">Advanced Limits</button>
+        <button class="tab-btn active" id="tabMotionBtn" data-tab="motion" role="tab" aria-selected="true">Motion &amp; Pressure</button>
+        <button class="tab-btn" id="tabConsumablesBtn" data-tab="consumables" role="tab" aria-selected="false">Consumables &amp; Notes</button>
       </div>
 
+      <div class="step-zone">
       <section class="tab-panel active" data-tab-panel="motion" role="tabpanel">
-        <h4>Motion & Pressure</h4>
-        <div class="row grid4">
-          <label>Time (s)<input id="stepTime" type="number" min="10" max="300"></label>
-          <label>Speed (RPM)<input id="stepSpeed" type="number" min="0"></label>
-          <label>Speed Ramp Up (s)<input id="stepSpeedRamp" type="number" min="0" max="60"></label>
-          <label>Pressure (lbs)<input id="stepPressure" type="number" min="0" max="16" step="0.1"></label>
-        </div>
         <div class="row grid3">
-          <label>Pressure Ramp Up (s)<input id="stepPressureRamp" type="number" min="0" max="60"></label>
+          <label>Time (s)<input id="stepTime" type="number" min="10" max="300"></label>
+          <label>Pressure (lbs)<input id="stepPressure" type="number" min="0" max="16" step="0.1"></label>
+          <label>Speed (RPM)<input id="stepSpeed" type="number" min="0"></label>
+        </div>
+        <div class="row grid2">
+          <label>Speed Ramp Up (s)<input id="stepSpeedRamp" type="number" min="0" max="60"></label>
           <label>Speed Ramp Down (s)<input id="stepSpeedRampDn" type="number" min="0" max="60"></label>
+        </div>
+        <div class="row grid2">
+          <label>Pressure Ramp Up (s)<input id="stepPressureRamp" type="number" min="0" max="60"></label>
           <label>Pressure Ramp Down (s)<input id="stepPressureRampDn" type="number" min="0" max="60"></label>
         </div>
       </section>
 
       <section class="tab-panel" data-tab-panel="consumables" role="tabpanel" hidden>
-        <h4>Consumables & Notes</h4>
-        <div class="row grid4">
-          <label>Film<select id="stepFilm"></select></label>
-          <label>Pad<select id="stepPad"></select></label>
-          <label>Lubricant<select id="stepLubricant"></select></label>
-          <label>FCI<input id="stepFCI" type="number" min="0" max="99"></label>
+        <div class="row grid3">
+          <label>Film
+            <div class="combo" id="comboFilm">
+              <input id="stepFilm" autocomplete="off">
+              <button type="button" class="combo-toggle" tabindex="-1" aria-label="Show options">&#9662;</button>
+              <ul class="combo-list" hidden></ul>
+            </div>
+          </label>
+          <label>Pad
+            <div class="combo" id="comboPad">
+              <input id="stepPad" autocomplete="off">
+              <button type="button" class="combo-toggle" tabindex="-1" aria-label="Show options">&#9662;</button>
+              <ul class="combo-list" hidden></ul>
+            </div>
+          </label>
+          <label>Lubricant
+            <div class="combo" id="comboLubricant">
+              <input id="stepLubricant" autocomplete="off">
+              <button type="button" class="combo-toggle" tabindex="-1" aria-label="Show options">&#9662;</button>
+              <ul class="combo-list" hidden></ul>
+            </div>
+          </label>
         </div>
         <div class="row grid2">
           <label>Step Note 1<input id="stepNote1"></label>
           <label>Step Note 2<input id="stepNote2"></label>
         </div>
       </section>
+      </div>
 
-      <section class="tab-panel" data-tab-panel="advanced" role="tabpanel" hidden>
-        <h4>Advanced Limits</h4>
-        <div class="row grid4">
-          <label>Lower Speed Limit<input id="stepLowerSpeed" type="number" min="0"></label>
-          <label>Upper Speed Limit<input id="stepUpperSpeed" type="number" min="0"></label>
-          <label>Lower Pressure Limit<input id="stepLowerPressure" type="number" min="0" step="0.1"></label>
-          <label>Upper Pressure Limit<input id="stepUpperPressure" type="number" min="0" step="0.1"></label>
+      <!-- Sticky action bar -->
+      <div class="editor-actions">
+        <div class="editor-actions-left">
+          <button id="saveBtn" disabled>Save</button>
+          <button id="resetBtn" class="secondary-btn" disabled>Reset</button>
+          <button id="cancelBtn" class="secondary-btn">Cancel</button>
         </div>
-        <div class="row grid2">
-          <label>Fixture Weight<input id="stepFixtureWeight" type="number" min="0" step="0.1"></label>
-          <label>OpCode<input id="stepOpCode" type="number" min="0"></label>
-        </div>
-      </section>
+        <button id="deleteBtn" class="danger-btn">Delete</button>
+      </div>
 
-      <div class="row">
-        <button id="saveBtn">Save</button>
-        <button id="deleteBtn">Delete</button>
-        <button id="importBtn" class="secondary-btn">Import</button>
-        <button id="exportBtn" class="secondary-btn">Export</button>
       </div>
       </section>
-
-      <div class="side-stack side-right">
-        <section class="panel card">
-          <div class="panel-head">
-            <h2>Settings</h2>
-            <span class="panel-sub">Machine Configuration</span>
-          </div>
-          <div class="settings-group">
-            <label class="settings-label" for="filmOptionInput">Film Options</label>
-            <div class="chip-input-row">
-              <input id="filmOptionInput" placeholder="Add film option" />
-              <button type="button" id="addFilmOptionBtn" class="secondary-btn">Add</button>
-            </div>
-            <div id="filmOptionList" class="chip-list" aria-live="polite"></div>
-          </div>
-          <div class="settings-group">
-            <label class="settings-label" for="padOptionInput">Pad Options</label>
-            <div class="chip-input-row">
-              <input id="padOptionInput" placeholder="Add pad option" />
-              <button type="button" id="addPadOptionBtn" class="secondary-btn">Add</button>
-            </div>
-            <div id="padOptionList" class="chip-list" aria-live="polite"></div>
-          </div>
-          <div class="settings-group">
-            <label class="settings-label" for="lubricantOptionInput">Lubricant Options</label>
-            <div class="chip-input-row">
-              <input id="lubricantOptionInput" placeholder="Add lubricant option" />
-              <button type="button" id="addLubricantOptionBtn" class="secondary-btn">Add</button>
-            </div>
-            <div id="lubricantOptionList" class="chip-list" aria-live="polite"></div>
-          </div>
-          <div class="row">
-            <button id="saveSettingsBtn">Save Settings</button>
-          </div>
-        </section>
-
-      </div>
     </main>
 
     <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
@@ -152,51 +222,6 @@
         <div class="modal-actions">
           <button type="button" id="confirmCancelBtn" class="secondary-btn">Cancel</button>
           <button type="button" id="confirmOkBtn">Confirm</button>
-        </div>
-      </div>
-    </div>
-
-    <div id="transferModal" class="modal-overlay" hidden>
-      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="transferTitle">
-        <h3 id="transferTitle">Transfer Recipes</h3>
-        <p id="transferSubtitle">Choose transfer method and options.</p>
-
-        <div class="row grid2">
-          <label>Action
-            <select id="transferActionSelect">
-              <option value="export">Export</option>
-              <option value="import">Import</option>
-            </select>
-          </label>
-          <label>Type
-            <select id="transferTypeSelect">
-              <option value="thumb">Thumb Drive Folder</option>
-              <option value="book">Recipe Book (.chef)</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="row" id="transferSelectedInfo"></div>
-
-        <div class="row" id="thumbPathRow">
-          <label>Folder Path<input id="transferThumbPath" placeholder="F:/Domaille"></label>
-          <button type="button" id="transferBrowseDirBtn" class="secondary-btn">Browse Folder</button>
-        </div>
-
-        <div class="row" id="bookFileRow" hidden>
-          <label>Recipe Book File<input id="transferBookFile" type="file" accept=".chef"></label>
-        </div>
-
-        <div class="row" id="bookNameRow">
-          <label>Save As Name<input id="transferBookName" value="recipe-book.chef"></label>
-          <button type="button" id="transferSuggestDriveBtn" class="secondary-btn">Use Removable Drive</button>
-        </div>
-
-        <div class="row" id="removableHintRow"></div>
-
-        <div class="modal-actions">
-          <button type="button" id="transferCancelBtn" class="secondary-btn">Cancel</button>
-          <button type="button" id="transferRunBtn">Run</button>
         </div>
       </div>
     </div>

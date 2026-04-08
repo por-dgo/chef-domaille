@@ -57,9 +57,20 @@ body {
 }
 
 .topbar {
-  padding: 1rem 1.2rem;
+  padding: 1rem 1.4rem;
   margin-bottom: 1rem;
   background: var(--surface-elevated);
+}
+
+.topbar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.topbar-icon {
+  font-size: 2.4rem;
+  line-height: 1;
 }
 
 .topbar h1 {
@@ -70,13 +81,14 @@ body {
 }
 
 .topbar p {
-  margin: 0.2rem 0 0;
+  margin: 0.15rem 0 0;
   color: var(--muted);
+  font-size: 0.88rem;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 300px minmax(580px, 1fr) 360px;
+  grid-template-columns: 380px minmax(400px, 1fr);
   gap: 1rem;
   align-items: start;
 }
@@ -84,6 +96,18 @@ body {
 .panel {
   padding: 1rem;
   min-height: 150px;
+}
+
+.panel.collapsible-panel {
+  min-height: 0;
+}
+
+.panel.collapsible-panel.collapsed {
+  padding: 0.55rem 1rem;
+}
+
+.panel.collapsible-panel.collapsed .panel-head {
+  margin-bottom: 0;
 }
 
 .panel-head {
@@ -105,6 +129,291 @@ body {
 
 .editor-card {
   background: var(--surface);
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-placeholder {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.editor-placeholder[hidden] {
+  display: none !important;
+}
+
+.editor-placeholder p {
+  margin: 0;
+}
+
+.placeholder-icon {
+  font-size: 2rem;
+  opacity: 0.4;
+  line-height: 1;
+}
+
+.recipe-meta {
+  padding-bottom: 0.7rem;
+  margin-bottom: 0.6rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.grid1 label { width: calc(25% - 0.45rem); }
+
+/* ---- Step tab bar (browser-tab style) ---- */
+.step-tab-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin-bottom: -1px;
+  position: relative;
+  z-index: 1;
+}
+
+.step-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.step-tabs::-webkit-scrollbar { display: none; }
+
+.step-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 8px 8px 0 0;
+  background: var(--tab-bg);
+  color: var(--tab-ink);
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 100ms ease;
+  position: relative;
+}
+
+.step-tab:hover {
+  background: var(--accent-soft);
+}
+
+.step-tab.active {
+  background: var(--surface-elevated);
+  border-bottom-color: var(--surface-elevated);
+  font-weight: 600;
+  color: var(--accent);
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.step-tab-close {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+
+.step-tab:hover .step-tab-close,
+.step-tab.active .step-tab-close {
+  opacity: 1;
+}
+
+.step-tab-close:hover {
+  background: var(--error);
+  color: #fff;
+}
+
+.step-tab-add {
+  border: 1px dashed var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  transition: background 100ms ease, color 100ms ease;
+}
+
+.step-tab-add:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* ---- Step zone ---- */
+.step-zone {
+  border: 1px solid var(--line);
+  border-radius: 0 0 10px 10px;
+  padding: 0.65rem;
+  background: var(--surface-elevated);
+}
+
+/* ---- Custom combo box ---- */
+.combo {
+  position: relative;
+  display: flex;
+}
+
+.combo input {
+  flex: 1;
+  border-radius: 8px 0 0 8px;
+  border-right: none;
+}
+
+.combo-toggle {
+  border: 1px solid var(--line);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  background: var(--field-bg);
+  color: var(--muted);
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.combo-toggle:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  transform: none;
+  filter: none;
+}
+
+.combo-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0.25rem 0;
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.combo-list[hidden] { display: none; }
+
+.combo-list li {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 80ms ease;
+}
+
+.combo-list li:hover,
+.combo-list li.highlighted {
+  background: var(--accent-soft);
+}
+
+.step-zone .tab-panel {
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin-bottom: 0;
+  background: transparent;
+}
+
+/* ---- Sticky action bar ---- */
+.editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding-top: 0.7rem;
+  margin-top: 0.7rem;
+  border-top: 1px solid var(--line);
+  position: sticky;
+  bottom: 0;
+  background: var(--surface);
+  z-index: 2;
+}
+
+.editor-actions-left {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.danger-btn {
+  background: transparent;
+  color: var(--error);
+  border: 1px solid color-mix(in oklab, var(--error) 40%, transparent);
+  font-weight: 600;
+}
+
+.danger-btn:hover {
+  background: var(--error);
+  color: #fff;
+  filter: none;
+}
+
+.collapsible-body {
+  /* shown/hidden via JS hidden attribute */
+}
+
+.panel-toggle {
+  margin-left: auto;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.75rem;
+  line-height: 1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 150ms ease;
+}
+
+.panel-toggle:hover {
+  background: var(--button-secondary-bg);
+  color: var(--ink);
+  transform: none;
+}
+
+.panel-toggle[aria-expanded="true"] {
+  transform: rotate(90deg);
+}
+
+.accordion-body {
+  border-top: 1px solid var(--line);
+  margin-top: 0.5rem;
+  padding-top: 0.6rem;
+}
+
+.accordion-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
+}
+
+.accordion-body .row {
+  margin-bottom: 0.5rem;
+}
+
+.removable-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
 }
 
 .side-stack {
@@ -185,25 +494,41 @@ button:hover {
 .recipe-list li {
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 0.4rem;
+  padding: 0.45rem 0.65rem;
   margin-bottom: 0.45rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  cursor: pointer;
   background: var(--surface-strong);
+  font-size: 0.92rem;
+  transition: background 100ms ease;
+}
+
+.recipe-list li:hover {
+  background: var(--accent-soft);
 }
 
 .recipe-list li.active {
   border-color: color-mix(in oklab, var(--accent) 55%, var(--line));
   background: var(--accent-soft);
+  font-weight: 600;
 }
 
-.step-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.55rem;
+.recipe-list li.export-selected {
+  background: var(--accent-soft);
 }
+
+.recipe-list li input[type="checkbox"] {
+  width: auto;
+  min-width: auto;
+  margin-right: 0.45rem;
+}
+
+.accordion-hint {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 0.4rem;
+}
+
+
 
 .tab-strip {
   display: flex;
@@ -230,11 +555,6 @@ button:hover {
   padding: 0.65rem;
   margin-bottom: 0.7rem;
   background: var(--surface-elevated);
-}
-
-.tab-panel h4 {
-  margin: 0 0 0.55rem;
-  color: #304157;
 }
 
 .settings-group {
