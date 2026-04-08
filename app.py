@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+import socket
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
 
 from recipe_store import RecipeBundle, RecipeStore
 from recipe_validation import PROFILE_5316_5320, validate_bundle
+
+
+def _find_available_port(host: str, start_port: int, max_tries: int = 100) -> int:
+    for offset in range(max_tries):
+        port = start_port + offset
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if sock.connect_ex((host, port)) != 0:
+                return port
+    raise RuntimeError(
+        f"No available port found between {start_port} and {start_port + max_tries - 1}"
+    )
 
 
 def _bundle_from_json(recipe_name: str, payload: dict) -> RecipeBundle:
@@ -101,5 +114,8 @@ def create_app(store_root: Path | None = None) -> Flask:
 
 
 if __name__ == "__main__":
+    host = "127.0.0.1"
+    port = _find_available_port(host, 5000)
+    print(f"Starting Chef Domaille at http://{host}:{port}")
     app = create_app()
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    app.run(host=host, port=port, debug=False)
