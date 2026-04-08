@@ -54,20 +54,33 @@ import sys
 if sys.platform == "win32":
     import platform
 
-    def _wmi_query_bypass(*args, **kwargs):
-        ver = sys.getwindowsversion()
-        return (
-            f"{ver.major}.{ver.minor}.{ver.build}",
-            ver.product_type,
-            f"{ver.major}.{ver.minor}.{ver.build}",
-            ver.service_pack_major,
-            ver.service_pack_minor,
-        )
+    def _wmi_query_bypass(table, *keys):
+        if table == "OS":
+            ver = sys.getwindowsversion()
+            data = {
+                "Version": f"{ver.major}.{ver.minor}.{ver.build}",
+                "ProductType": ver.product_type,
+                "Caption": f"Microsoft Windows {ver.major}.{ver.minor}.{ver.build}",
+                "ServicePackMajorVersion": ver.service_pack_major,
+                "ServicePackMinorVersion": ver.service_pack_minor,
+            }
+        elif table == "CPU":
+            import struct
+            data = {
+                "Manufacturer": "GenuineIntel",
+                "Caption": f"{struct.calcsize('P') * 8}-bit processor",
+            }
+        else:
+            data = {k: "" for k in keys}
+        return tuple(data.get(k, "") for k in keys)
 
-    platform._wmi_query = _wmi_query_bypass
+    if hasattr(platform, "_wmi_query"):
+        platform._wmi_query = _wmi_query_bypass
 ```
 
 This runs before any Python code in the venv, including pip.
+
+The same patch is also bundled as a PyInstaller runtime hook (`rthook_wmi.py`) so the built `.exe` works on affected machines too.
 
 ## Important Notes
 
