@@ -33,6 +33,7 @@ class RecipeStore:
 
     def __init__(self, root: Path | str):
         self.root = Path(root)
+        self._bootstrapping = False
 
     @property
     def domaille_root(self) -> Path:
@@ -59,6 +60,95 @@ class RecipeStore:
 
     def ensure_structure(self) -> None:
         self.steps_dir.mkdir(parents=True, exist_ok=True)
+        self._bootstrap_defaults_if_empty()
+
+    def _raw_list_recipes(self) -> list[str]:
+        """List recipes without triggering ensure_structure (avoids circular recursion)."""
+        if not self.processes_dir.exists():
+            return []
+        recipes = [
+            entry.name
+            for entry in self.processes_dir.iterdir()
+            if entry.is_file() and entry.name != "Settings.txt"
+        ]
+        return sorted(recipes)
+
+    def _bootstrap_defaults_if_empty(self) -> None:
+        """Load default recipes and settings if store is empty (first run)."""
+        if self._bootstrapping:
+            return  # Already bootstrapping, prevent re-entry
+        
+        if self._raw_list_recipes():
+            return  # Store already has recipes, skip bootstrap
+        
+        self._bootstrapping = True
+        try:
+            # Create default Settings.txt
+            if not self.settings_path.exists():
+                settings_content = "\n".join([
+                    "strMachineProfile := 5316",
+                    "strLanguage := English",
+                    "strDefaultUnit := Inches",
+                    "",
+                ])
+                self.settings_path.write_text(settings_content, encoding="utf-8")
+            
+            # Create default "Sample" recipe (use internal save to avoid re-bootstrapping)
+            sample_recipe = RecipeBundle(
+                recipe_name="Sample",
+                recipe_data={
+                    "strRecipeDescription": "Sample glass bead polishing recipe",
+                    "intRecipeNoOfSteps": "2",
+                    "intRecipeQty": "12",
+                    "intRecipeReworkStep": "2",
+                },
+                steps=[
+                    {
+                        "rRecipeStepTime": "45",
+                        "rRecipeStepSpeed": "150",
+                        "rRecipeStepSpeedRamp": "2",
+                        "rRecipeStepPressure": "14",
+                        "rRecipeStepPressureRamp": "2",
+                        "rRecipeStepFCI": "25",
+                        "rRecipeStepLowerSpeedLimit": "100",
+                        "rRecipeStepUpperSpeedLimit": "200",
+                        "rRecipeStepLowerPressureLimit": "10",
+                        "rRecipeStepUpperPressureLimit": "16",
+                        "rRecipeStepFixtureWeight": "2.5",
+                        "intRecipeStepOpCode": "300",
+                        "strRecipeStepFilm": "Brown 5µm",
+                        "strRecipeStepLubricant": "DI Water",
+                        "strRecipeStepPad": "70 Duro Violet",
+                        "rRecipeStepSpeedRampDn": "1",
+                        "rRecipeStepPressureRampDn": "1",
+                    },
+                    {
+                        "rRecipeStepTime": "30",
+                        "rRecipeStepSpeed": "120",
+                        "rRecipeStepSpeedRamp": "1",
+                        "rRecipeStepPressure": "12",
+                        "rRecipeStepPressureRamp": "1",
+                        "rRecipeStepFCI": "50",
+                        "rRecipeStepLowerSpeedLimit": "80",
+                        "rRecipeStepUpperSpeedLimit": "160",
+                        "rRecipeStepLowerPressureLimit": "8",
+                        "rRecipeStepUpperPressureLimit": "14",
+                        "rRecipeStepFixtureWeight": "2.5",
+                        "intRecipeStepOpCode": "310",
+                        "strRecipeStepFilm": "Red 1µm",
+                        "strRecipeStepLubricant": "DI Water + Isopropanol",
+                        "strRecipeStepPad": "90 Duro White",
+                        "rRecipeStepSpeedRampDn": "1",
+                        "rRecipeStepPressureRampDn": "1",
+                    },
+                ],
+            )
+            # Direct write without recursion
+            write_recipe(str(self.domaille_root), sample_recipe.recipe_name, sample_recipe.recipe_data)
+            for index, step_data in enumerate(sample_recipe.steps, start=1):
+                write_step(str(self.domaille_root), sample_recipe.recipe_name, index, step_data)
+        finally:
+            self._bootstrapping = False
 
     def list_recipes(self) -> list[str]:
         self.ensure_structure()
