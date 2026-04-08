@@ -62,6 +62,14 @@ This is separate from the machine's USB folder structure. Use **Export** to copy
 | Port already in use | Chef Domaille automatically tries the next available port. Check the console for the actual URL |
 | Recipes missing after reinstall | Your recipes are safe in `%APPDATA%\Chef Domaille` — they persist across updates |
 
+## Documentation
+
+- [APM-HDC-5320 Polishing Machine User Manual](docs/APM-HDC-5320-Polishing-Machine-User-Manual.pdf) — operator manual for the 5320
+- [APM-HDC-5400 Polishing Machine User Manual](docs/APM-HDC-5400-Polishing-Machine-User-Manual.pdf) — operator manual for the 5400 (supplementary reference)
+- [Recipe File Format](docs/recipe-format-contract.md) — detailed breakdown of the files Chef Domaille reads and writes to USB
+
+Additional developer notes are in the [`docs/`](docs/) folder.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
