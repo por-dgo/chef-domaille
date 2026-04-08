@@ -100,6 +100,8 @@
       <div class="row">
         <button id="saveBtn">Save</button>
         <button id="deleteBtn">Delete</button>
+        <button id="importBtn" class="secondary-btn">Import</button>
+        <button id="exportBtn" class="secondary-btn">Export</button>
       </div>
       </section>
 
@@ -138,30 +140,6 @@
           </div>
         </section>
 
-        <section class="panel card">
-          <div class="panel-head">
-            <h2>Transfer</h2>
-            <span class="panel-sub">USB + ZIP Media</span>
-          </div>
-
-          <div class="row grid2">
-            <label>Thumb Import Path<input id="thumbImportPath" placeholder="E:/Domaille"></label>
-            <label>Thumb Export Path<input id="thumbExportPath" placeholder="E:/Domaille"></label>
-          </div>
-          <div class="row">
-            <button id="importThumbBtn">Import Selected From Thumb</button>
-            <button id="exportThumbBtn">Export Selected To Thumb</button>
-          </div>
-
-          <div class="row grid2">
-            <label>ZIP Import Path<input id="zipImportPath" placeholder="C:/temp/recipes.zip"></label>
-            <label>ZIP Export Path<input id="zipExportPath" placeholder="C:/temp/recipes.zip"></label>
-          </div>
-          <div class="row">
-            <button id="importZipBtn">Import Selected From ZIP</button>
-            <button id="exportZipBtn">Export Selected To ZIP</button>
-          </div>
-        </section>
       </div>
     </main>
 
@@ -174,6 +152,51 @@
         <div class="modal-actions">
           <button type="button" id="confirmCancelBtn" class="secondary-btn">Cancel</button>
           <button type="button" id="confirmOkBtn">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="transferModal" class="modal-overlay" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="transferTitle">
+        <h3 id="transferTitle">Transfer Recipes</h3>
+        <p id="transferSubtitle">Choose transfer method and options.</p>
+
+        <div class="row grid2">
+          <label>Action
+            <select id="transferActionSelect">
+              <option value="export">Export</option>
+              <option value="import">Import</option>
+            </select>
+          </label>
+          <label>Type
+            <select id="transferTypeSelect">
+              <option value="thumb">Thumb Drive Folder</option>
+              <option value="book">Recipe Book (.chef)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row" id="transferSelectedInfo"></div>
+
+        <div class="row" id="thumbPathRow">
+          <label>Folder Path<input id="transferThumbPath" placeholder="F:/Domaille"></label>
+          <button type="button" id="transferBrowseDirBtn" class="secondary-btn">Browse Folder</button>
+        </div>
+
+        <div class="row" id="bookFileRow" hidden>
+          <label>Recipe Book File<input id="transferBookFile" type="file" accept=".chef"></label>
+        </div>
+
+        <div class="row" id="bookNameRow">
+          <label>Save As Name<input id="transferBookName" value="recipe-book.chef"></label>
+          <button type="button" id="transferSuggestDriveBtn" class="secondary-btn">Use Removable Drive</button>
+        </div>
+
+        <div class="row" id="removableHintRow"></div>
+
+        <div class="modal-actions">
+          <button type="button" id="transferCancelBtn" class="secondary-btn">Cancel</button>
+          <button type="button" id="transferRunBtn">Run</button>
         </div>
       </div>
     </div>

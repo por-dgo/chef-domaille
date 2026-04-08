@@ -5,6 +5,7 @@ const state = {
   currentStepIndex: 0,
   selectedForTransfer: new Set(),
   consumables: { Film: [], Pad: [], Lubricant: [] },
+  removableDrives: [],
 };
 
 function el(id) { return document.getElementById(id); }
@@ -66,6 +67,179 @@ function confirmDialog(message) {
     overlay.addEventListener("click", onOverlay);
     document.addEventListener("keydown", onEscape);
   });
+}
+
+function getSelectedRecipeNames() {
+  const selected = Array.from(state.selectedForTransfer.values());
+  if (selected.length > 0) return selected;
+  if (state.selectedRecipe) return [state.selectedRecipe];
+  return [];
+}
+
+function closeTransferModal() {
+  const overlay = el("transferModal");
+  if (overlay) overlay.hidden = true;
+}
+
+function renderTransferSelectedInfo() {
+  const box = el("transferSelectedInfo");
+  if (!box) return;
+  const selected = getSelectedRecipeNames();
+  if (selected.length === 0) {
+    box.textContent = "No explicit selection: export book defaults to all recipes.";
+    return;
+  }
+  box.textContent = `Selected recipes (${selected.length}): ${selected.join(", ")}`;
+}
+
+function renderRemovableHint() {
+  const row = el("removableHintRow");
+  if (!row) return;
+  if (!state.removableDrives.length) {
+    row.textContent = "No removable drives detected. You can still enter a path manually.";
+    return;
+  }
+  row.textContent = `Removable drives detected: ${state.removableDrives.join(", ")}`;
+}
+
+function refreshTransferModalUi() {
+  const action = el("transferActionSelect").value;
+  const type = el("transferTypeSelect").value;
+
+  const thumbRow = el("thumbPathRow");
+  const bookFileRow = el("bookFileRow");
+  const bookNameRow = el("bookNameRow");
+  if (!thumbRow || !bookFileRow || !bookNameRow) return;
+
+  const isThumb = type === "thumb";
+  thumbRow.hidden = !isThumb;
+  bookFileRow.hidden = !(type === "book" && action === "import");
+  bookNameRow.hidden = !(type === "book" && action === "export");
+
+  renderTransferSelectedInfo();
+  renderRemovableHint();
+}
+
+async function loadRemovableDrives() {
+  try {
+    const data = await api("/api/system/removable-drives");
+    state.removableDrives = data.drives || [];
+  } catch {
+    state.removableDrives = [];
+  }
+}
+
+async function openTransferModal(defaultAction) {
+  await loadRemovableDrives();
+  const overlay = el("transferModal");
+  if (!overlay) return;
+  el("transferActionSelect").value = defaultAction;
+  refreshTransferModalUi();
+  overlay.hidden = false;
+}
+
+async function pickDirectoryPath() {
+  if (window.showDirectoryPicker) {
+    try {
+      const dir = await window.showDirectoryPicker();
+      if (dir?.name) {
+        const driveMatch = state.removableDrives.find((d) => d.toLowerCase().startsWith(dir.name.toLowerCase()));
+        if (driveMatch) return driveMatch;
+      }
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+async function downloadRecipeBook(selectedRecipes, fileName) {
+  const response = await fetch("/api/transfer/export/book", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ selected_recipes: selectedRecipes }),
+  });
+  if (!response.ok) {
+    let errorText = "Recipe book export failed";
+    try {
+      const data = await response.json();
+      errorText = data.error || errorText;
+    } catch {
+      // ignore parse errors
+    }
+    throw new Error(errorText);
+  }
+
+  const blob = await response.blob();
+  const safeName = (fileName || "recipe-book.chef").trim() || "recipe-book.chef";
+
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: safeName,
+        types: [{ description: "Chef Recipe Book", accept: { "application/octet-stream": [".chef"] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch {
+      // Fall through to anchor download.
+    }
+  }
+
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = safeName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+async function runTransferModal() {
+  const action = el("transferActionSelect").value;
+  const type = el("transferTypeSelect").value;
+  const selected = getSelectedRecipeNames();
+
+  if (type === "thumb" && action === "export") {
+    const destination = el("transferThumbPath").value.trim();
+    if (!destination) throw new Error("Thumb export folder path is required");
+    await transfer("/api/transfer/export/thumb", {
+      destination_path: destination,
+      selected_recipes: selected,
+    });
+  } else if (type === "thumb" && action === "import") {
+    const source = el("transferThumbPath").value.trim();
+    if (!source) throw new Error("Thumb import folder path is required");
+    await transfer("/api/transfer/import/thumb", {
+      source_path: source,
+      selected_recipes: selected,
+      overwrite: true,
+    });
+  } else if (type === "book" && action === "export") {
+    await downloadRecipeBook(selected, el("transferBookName").value);
+    status("Recipe book export complete");
+  } else if (type === "book" && action === "import") {
+    const fileInput = el("transferBookFile");
+    const file = fileInput?.files?.[0];
+    if (!file) throw new Error("Select a .chef file to import");
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch("/api/transfer/import/book", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "Recipe book import failed");
+    }
+    await refreshRecipes();
+    status(`Copied: ${data.copied.join(", ") || "(none)"}\nSkipped: ${data.skipped.join(", ") || "(none)"}`);
+  }
+
+  closeTransferModal();
 }
 
 function setActiveTab(tabName) {
@@ -489,6 +663,8 @@ function wireEvents() {
   el("refreshBtn").addEventListener("click", refreshRecipes);
   el("saveBtn").addEventListener("click", () => saveRecipe().catch(e => status(e.message, true)));
   el("deleteBtn").addEventListener("click", () => deleteRecipe().catch(e => status(e.message, true)));
+  el("importBtn").addEventListener("click", () => openTransferModal("import").catch(e => status(e.message, true)));
+  el("exportBtn").addEventListener("click", () => openTransferModal("export").catch(e => status(e.message, true)));
 
   el("stepPrevBtn").addEventListener("click", () => {
     if (!state.bundle) return;
@@ -504,34 +680,30 @@ function wireEvents() {
     renderCurrentStep();
   });
 
-  el("importThumbBtn").addEventListener("click", () => {
-    transfer("/api/transfer/import/thumb", {
-      source_path: el("thumbImportPath").value,
-      selected_recipes: selectedRecipes(),
-      overwrite: true,
-    }).catch(e => status(e.message, true));
+  el("transferCancelBtn").addEventListener("click", closeTransferModal);
+  el("transferRunBtn").addEventListener("click", () => runTransferModal().catch(e => status(e.message, true)));
+  el("transferActionSelect").addEventListener("change", refreshTransferModalUi);
+  el("transferTypeSelect").addEventListener("change", refreshTransferModalUi);
+
+  el("transferBrowseDirBtn").addEventListener("click", async () => {
+    const picked = await pickDirectoryPath();
+    if (picked) {
+      el("transferThumbPath").value = picked;
+      return;
+    }
+    if (state.removableDrives.length) {
+      el("transferThumbPath").value = state.removableDrives[0];
+    }
   });
 
-  el("exportThumbBtn").addEventListener("click", () => {
-    transfer("/api/transfer/export/thumb", {
-      destination_path: el("thumbExportPath").value,
-      selected_recipes: selectedRecipes(),
-    }).catch(e => status(e.message, true));
-  });
-
-  el("importZipBtn").addEventListener("click", () => {
-    transfer("/api/transfer/import/zip", {
-      zip_path: el("zipImportPath").value,
-      selected_recipes: selectedRecipes(),
-      overwrite: true,
-    }).catch(e => status(e.message, true));
-  });
-
-  el("exportZipBtn").addEventListener("click", () => {
-    transfer("/api/transfer/export/zip", {
-      zip_path: el("zipExportPath").value,
-      selected_recipes: selectedRecipes(),
-    }).catch(e => status(e.message, true));
+  el("transferSuggestDriveBtn").addEventListener("click", () => {
+    if (!state.removableDrives.length) {
+      status("No removable drives detected", true);
+      return;
+    }
+    el("transferThumbPath").value = state.removableDrives[0];
+    el("transferTypeSelect").value = "thumb";
+    refreshTransferModalUi();
   });
 
   const saveSettingsBtn = el("saveSettingsBtn");

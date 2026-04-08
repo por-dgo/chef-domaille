@@ -369,6 +369,19 @@ button:hover {
   gap: 0.5rem;
 }
 
+#transferSelectedInfo,
+#removableHintRow,
+#transferSubtitle {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+#thumbPathRow label,
+#bookFileRow label,
+#bookNameRow label {
+  flex: 1 1 280px;
+}
+
 @keyframes toast-slide {
   from {
     transform: translateY(10px);

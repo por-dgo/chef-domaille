@@ -1,3 +1,4 @@
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -62,6 +63,68 @@ class AppTests(unittest.TestCase):
             self.assertEqual(get_res.status_code, 200)
             data = get_res.get_json()
             self.assertEqual(data["recipe_data"]["intRecipeQty"], "24")
+
+    def test_removable_drives_endpoint(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            app = create_app(Path(temp_dir))
+            client = app.test_client()
+
+            res = client.get("/api/system/removable-drives")
+            self.assertEqual(res.status_code, 200)
+            body = res.get_json()
+            self.assertIn("drives", body)
+
+    def test_recipe_book_export_and_import(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            app = create_app(Path(temp_dir))
+            client = app.test_client()
+
+            payload = {
+                "recipe_data": {
+                    "strRecipeDescription": "alpha",
+                    "intRecipeNoOfSteps": "1",
+                    "intRecipeQty": "24",
+                    "intRecipeReworkStep": "1",
+                },
+                "steps": [
+                    {
+                        "rRecipeStepTime": "25",
+                        "rRecipeStepSpeed": "110",
+                        "rRecipeStepSpeedRamp": "1",
+                        "rRecipeStepPressure": "12",
+                        "rRecipeStepPressureRamp": "1",
+                        "rRecipeStepFCI": "0",
+                        "rRecipeStepLowerSpeedLimit": "10",
+                        "rRecipeStepUpperSpeedLimit": "10",
+                        "rRecipeStepLowerPressureLimit": "0.5",
+                        "rRecipeStepUpperPressureLimit": "0.5",
+                        "rRecipeStepFixtureWeight": "0",
+                        "intRecipeStepOpCode": "300",
+                        "strRecipeStepFilm": "Brown 5um",
+                        "strRecipeStepLubricant": "DI Water",
+                        "strRecipeStepPad": "70 Duro Violet",
+                        "rRecipeStepSpeedRampDn": "1",
+                        "rRecipeStepPressureRampDn": "1",
+                    }
+                ],
+            }
+
+            put_res = client.put("/api/recipes/alpha", json=payload)
+            self.assertEqual(put_res.status_code, 200)
+
+            export_res = client.post("/api/transfer/export/book", json={"selected_recipes": ["alpha"]})
+            self.assertEqual(export_res.status_code, 200)
+            self.assertIn("recipe-book.chef", export_res.headers.get("Content-Disposition", ""))
+
+            chef_bytes = export_res.data
+            import_res = client.post(
+                "/api/transfer/import/book",
+                data={"file": (io.BytesIO(chef_bytes), "book.chef")},
+                content_type="multipart/form-data",
+            )
+            self.assertEqual(import_res.status_code, 200)
+            import_body = import_res.get_json()
+            self.assertTrue(import_body["ok"])
 
 
 if __name__ == "__main__":

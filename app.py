@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import ctypes
+import io
+import os
 import socket
+import tempfile
 import threading
 import webbrowser
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_file
 
 from recipe_store import RecipeBundle, RecipeStore
 from recipe_settings import RecipeSettings
@@ -32,6 +36,25 @@ def _bundle_from_json(recipe_name: str, payload: dict) -> RecipeBundle:
     recipe_data = {k: str(v) for k, v in recipe_data.items()}
     normalized_steps = [{k: str(v) for k, v in step.items()} for step in steps]
     return RecipeBundle(recipe_name=recipe_name, recipe_data=recipe_data, steps=normalized_steps)
+
+
+def _list_removable_drives() -> list[str]:
+    """Return Windows removable drive roots like ['F:\\', 'G:\\']."""
+    if os.name != "nt":
+        return []
+
+    drives: list[str] = []
+    bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+    get_drive_type = ctypes.windll.kernel32.GetDriveTypeW
+
+    for i in range(26):
+        if bitmask & (1 << i):
+            drive = f"{chr(65 + i)}:\\"
+            # DRIVE_REMOVABLE = 2
+            if get_drive_type(drive) == 2:
+                drives.append(drive)
+
+    return drives
 
 
 def create_app(store_root: Path | None = None) -> Flask:
@@ -107,6 +130,57 @@ def create_app(store_root: Path | None = None) -> Flask:
         zip_path = payload["zip_path"]
         selected = payload.get("selected_recipes") or []
         result = store.export_to_zip(zip_path, selected)
+        return jsonify({"ok": True, "copied": result.copied, "skipped": result.skipped})
+
+    @app.get("/api/system/removable-drives")
+    def removable_drives():
+        return jsonify({"drives": _list_removable_drives()})
+
+    @app.post("/api/transfer/export/book")
+    def export_book():
+        payload = request.get_json(force=True)
+        selected = payload.get("selected_recipes")
+        if not selected:
+            selected = store.list_recipes()
+
+        with tempfile.NamedTemporaryFile(suffix=".chef", delete=False) as temp_file:
+            temp_path = temp_file.name
+
+        store.export_to_zip(temp_path, selected, include_settings=True)
+        data = Path(temp_path).read_bytes()
+        try:
+            Path(temp_path).unlink()
+        except OSError:
+            pass
+
+        return send_file(
+            io.BytesIO(data),
+            as_attachment=True,
+            download_name="recipe-book.chef",
+            mimetype="application/octet-stream",
+        )
+
+    @app.post("/api/transfer/import/book")
+    def import_book():
+        if "file" not in request.files:
+            return jsonify({"ok": False, "error": "No file provided"}), 400
+
+        upload = request.files["file"]
+        if not upload.filename:
+            return jsonify({"ok": False, "error": "No file selected"}), 400
+
+        with tempfile.NamedTemporaryFile(suffix=".chef", delete=False) as temp_file:
+            temp_path = temp_file.name
+            upload.save(temp_path)
+
+        try:
+            result = store.import_from_zip(temp_path, selected_recipes=None, overwrite=True)
+        finally:
+            try:
+                Path(temp_path).unlink()
+            except OSError:
+                pass
+
         return jsonify({"ok": True, "copied": result.copied, "skipped": result.skipped})
 
     @app.get("/api/profiles/current")
