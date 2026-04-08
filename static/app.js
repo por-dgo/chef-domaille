@@ -22,6 +22,32 @@ function settingsStatus(msg, isError = false) {
   box.style.color = isError ? "#ff9e9e" : "#c7ffd4";
 }
 
+function setActiveTab(tabName) {
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabPanels = document.querySelectorAll(".tab-panel");
+
+  tabButtons.forEach((button) => {
+    const isActive = button.dataset.tab === tabName;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", isActive ? "true" : "false");
+  });
+
+  tabPanels.forEach((panel) => {
+    const isActive = panel.dataset.tabPanel === tabName;
+    panel.classList.toggle("active", isActive);
+    panel.hidden = !isActive;
+  });
+}
+
+function wireTabs() {
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setActiveTab(button.dataset.tab);
+    });
+  });
+}
+
 async function api(path, method = "GET", body = null) {
   const res = await fetch(path, {
     method,
@@ -57,6 +83,20 @@ function populateSelectDropdowns() {
       select.appendChild(option);
     }
   }
+}
+
+function setSelectValue(id, value) {
+  const select = el(id);
+  if (!select) return;
+  const safeValue = value || "";
+  const exists = Array.from(select.options).some((option) => option.value === safeValue);
+  if (!exists && safeValue) {
+    const dynamicOption = document.createElement("option");
+    dynamicOption.value = safeValue;
+    dynamicOption.textContent = `${safeValue} (custom)`;
+    select.appendChild(dynamicOption);
+  }
+  select.value = safeValue;
 }
 
 function loadSettingsEditor() {
@@ -140,9 +180,9 @@ function renderCurrentStep() {
   el("stepPressureRamp").value = step.rRecipeStepPressureRamp || "";
   el("stepSpeedRampDn").value = step.rRecipeStepSpeedRampDn || "";
   el("stepPressureRampDn").value = step.rRecipeStepPressureRampDn || "";
-  el("stepFilm").value = step.strRecipeStepFilm || "";
-  el("stepPad").value = step.strRecipeStepPad || "";
-  el("stepLubricant").value = step.strRecipeStepLubricant || "";
+  setSelectValue("stepFilm", step.strRecipeStepFilm || "");
+  setSelectValue("stepPad", step.strRecipeStepPad || "");
+  setSelectValue("stepLubricant", step.strRecipeStepLubricant || "");
   el("stepFCI").value = step.rRecipeStepFCI || "0";
   el("stepNote1").value = step.strRecipeStepDescription1 || "";
   el("stepNote2").value = step.strRecipeStepDescription2 || "";
@@ -335,6 +375,7 @@ function wireEvents() {
 }
 
 wireEvents();
+wireTabs();
 loadConsumables().catch(e => settingsStatus(e.message, true));
 refreshRecipes().catch(e => status(e.message, true));
 newRecipe();
