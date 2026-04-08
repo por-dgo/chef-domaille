@@ -27,7 +27,8 @@ def read_kv_file(path: Path) -> OrderedDict[str, str]:
     data: OrderedDict[str, str] = OrderedDict()
     with path.open("r", encoding="utf-8") as handle:
         for raw_line in handle:
-            if not raw_line.strip():
+            stripped = raw_line.strip()
+            if not stripped or stripped.startswith("'"):
                 continue
             key, value = parse_kv_line(raw_line)
             data[key] = value

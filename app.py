@@ -62,6 +62,11 @@ def create_app(store_root: Path | None = None) -> Flask:
     store = RecipeStore(store_root or RecipeStore.default_root())
     store.ensure_structure()
 
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        code = getattr(e, "code", 500)
+        return jsonify({"ok": False, "errors": [str(e)]}), code
+
     @app.get("/")
     def home():
         return render_template("index.html")
@@ -101,16 +106,20 @@ def create_app(store_root: Path | None = None) -> Flask:
     @app.post("/api/transfer/import/thumb")
     def import_thumb():
         payload = request.get_json(force=True)
-        source_path = payload["source_path"]
+        source_path = Path(payload["source_path"])
+        if source_path.name.lower() != "domaille":
+            source_path = source_path / "Domaille"
         selected = payload.get("selected_recipes")
         overwrite = bool(payload.get("overwrite", False))
         result = store.import_from_domaille_folder(source_path, selected, overwrite=overwrite)
-        return jsonify({"ok": True, "copied": result.copied, "skipped": result.skipped})
+        return jsonify({"ok": True, "added": result.added, "updated": result.updated, "unchanged": result.unchanged, "skipped": result.skipped, "settings_added": result.settings_added})
 
     @app.post("/api/transfer/export/thumb")
     def export_thumb():
         payload = request.get_json(force=True)
-        destination_path = payload["destination_path"]
+        destination_path = Path(payload["destination_path"])
+        if destination_path.name.lower() != "domaille":
+            destination_path = destination_path / "Domaille"
         selected = payload.get("selected_recipes") or []
         result = store.export_to_domaille_folder(destination_path, selected)
         return jsonify({"ok": True, "copied": result.copied, "skipped": result.skipped})
@@ -181,7 +190,7 @@ def create_app(store_root: Path | None = None) -> Flask:
             except OSError:
                 pass
 
-        return jsonify({"ok": True, "copied": result.copied, "skipped": result.skipped})
+        return jsonify({"ok": True, "added": result.added, "updated": result.updated, "unchanged": result.unchanged, "skipped": result.skipped, "settings_added": result.settings_added})
 
     @app.get("/api/profiles/current")
     def profile():

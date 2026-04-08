@@ -25,8 +25,16 @@ class RecipeBundle:
 
 @dataclass
 class TransferResult:
-    copied: list[str]
+    added: list[str]
+    updated: list[str]
     skipped: list[str]
+    unchanged: list[str]
+    settings_added: dict[str, list[str]]
+
+    @property
+    def copied(self) -> list[str]:
+        """Back-compat: added + updated."""
+        return self.added + self.updated
 
 
 class RecipeStore:
@@ -221,13 +229,14 @@ class RecipeStore:
         available = [entry.name for entry in source_processes.iterdir() if entry.is_file()]
         selected = set(selected_recipes or available)
 
-        copied: list[str] = []
+        added: list[str] = []
+        updated: list[str] = []
         skipped: list[str] = []
+        unchanged: list[str] = []
+        existing_recipes = self.list_recipes()
+
         for recipe_name in sorted(selected):
             if recipe_name not in available:
-                skipped.append(recipe_name)
-                continue
-            if recipe_name in self.list_recipes() and not overwrite:
                 skipped.append(recipe_name)
                 continue
 
@@ -237,10 +246,56 @@ class RecipeStore:
                 dict(read_step(str(source_root), recipe_name, n))
                 for n in range(1, step_count + 1)
             ]
-            self.save_bundle(RecipeBundle(recipe_name, recipe_data, steps))
-            copied.append(recipe_name)
+            incoming = RecipeBundle(recipe_name, recipe_data, steps)
 
-        return TransferResult(copied=copied, skipped=skipped)
+            if recipe_name not in existing_recipes:
+                self.save_bundle(incoming)
+                added.append(recipe_name)
+            elif not overwrite:
+                skipped.append(recipe_name)
+            else:
+                # Compare to existing
+                existing = self.load_bundle(recipe_name)
+                if existing.recipe_data == incoming.recipe_data and existing.steps == incoming.steps:
+                    unchanged.append(recipe_name)
+                else:
+                    self.save_bundle(incoming)
+                    updated.append(recipe_name)
+
+        # Merge settings (consumables) from source, case-insensitive dedup
+        source_settings_path = source_root / "Settings.txt"
+        settings_added: dict[str, list[str]] = {}
+        if source_settings_path.exists():
+            settings_added = self._merge_settings(source_settings_path)
+
+        return TransferResult(added=added, updated=updated, skipped=skipped, unchanged=unchanged, settings_added=settings_added)
+
+    def _merge_settings(self, source_settings_path: Path) -> dict[str, list[str]]:
+        """Merge consumable lists from source into local settings (case-insensitive dedup).
+        Returns a dict of category -> list of newly added values."""
+        source = RecipeSettings(source_settings_path)
+        local = RecipeSettings(self.settings_path)
+        source_data = source.read_settings()
+        local_data = local.read_settings()
+
+        added: dict[str, list[str]] = {}
+        for key in ("Film", "Pad", "Lubricant"):
+            incoming = source_data.get(key, [])
+            existing = local_data.get(key, [])
+            seen = {v.lower() for v in existing}
+            merged = list(existing)
+            new_values: list[str] = []
+            for value in incoming:
+                if value.lower() not in seen:
+                    seen.add(value.lower())
+                    merged.append(value)
+                    new_values.append(value)
+            local_data[key] = merged
+            if new_values:
+                added[key] = new_values
+
+        local.write_settings(local_data)
+        return added
 
     def export_to_domaille_folder(
         self,
@@ -271,7 +326,7 @@ class RecipeStore:
             settings_dest.parent.mkdir(parents=True, exist_ok=True)
             settings_dest.write_text(self.settings_path.read_text(encoding="utf-8"), encoding="utf-8")
 
-        return TransferResult(copied=copied, skipped=skipped)
+        return TransferResult(added=copied, updated=[], skipped=skipped, unchanged=[], settings_added={})
 
     def export_to_zip(
         self,
