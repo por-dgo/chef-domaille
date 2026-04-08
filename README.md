@@ -1,42 +1,67 @@
-# Chef Domaille
+# 🍳 Chef Domaille
 
-Simple offline recipe generator for Domaille APM-HDC-5320.
+Recipe manager for the Domaille APM-HDC-5316 and APM-HDC-5320 fiber optic polishing machines.
 
-## What It Does
+Chef Domaille lets you create, edit, and organize polishing recipes on your PC, then export them to a USB drive for the machine — no more editing recipes one field at a time on the machine's touchscreen.
 
-- Creates the default Domaille recipe folder structure if it does not exist
-- Creates a default settings file and starter recipe
-- Lists available recipes
-- Displays recipe details and step files
-- Guides creation of new recipes interactively
+## Getting Started
 
-## Run
+1. Download `Chef Domaille-v*.zip` from the [latest release](https://github.com/por-dgo/chef-domaille/releases/latest)
+2. Extract the zip anywhere on your PC
+3. Double-click **Chef Domaille.exe**
+4. Your browser opens automatically to the recipe editor
 
-```powershell
-python .\recipe.py
+A small console window will appear — this is the server powering the editor. **Leave it open** while you work. Close it when you're done.
+
+## What You Can Do
+
+### Create and Edit Recipes
+
+- Set the recipe name, description, and contact quantity
+- Add up to 9 polishing steps per recipe
+- Configure each step: time, pressure, speed, ramp rates
+- Assign consumables (film, pad, lubricant) and notes per step
+- Reorder or remove steps with drag handles
+
+### Manage Consumable Options
+
+Expand the **Machine Settings** panel to customize the dropdown lists for Film, Pad, and Lubricant. These are the options that appear when editing a step. Add or remove entries to match what's stocked at your workstation.
+
+### Import and Export
+
+- **Export to USB** — Select recipes and write them to a thumb drive in the format the machine expects (`Domaille/Processes/` and `Domaille/Processes/Steps/`)
+- **Import from USB** — Pull recipes from a thumb drive into your local library
+- **Recipe Book (.chef)** — Export a portable bundle of recipes to share with colleagues, or import one they've shared with you
+
+### Validation
+
+Recipes are validated against the 5316/5320 machine profile before saving. The editor will flag values that are out of range (e.g., pressure above 16 lbs, speed beyond machine limits) so you catch problems before they reach the machine.
+
+## Where Recipes Are Stored
+
+Recipes live in your Windows AppData folder:
+
+```
+%APPDATA%\Chef Domaille\Domaille\
+├── Settings.txt
+└── Processes/
+    ├── <recipe_name>
+    └── Steps/
+        ├── <recipe_name>.001
+        ├── <recipe_name>.002
+        └── ...
 ```
 
-The script can create the default Domaille/Processes/Steps folder structure if it is missing.
+This is separate from the machine's USB folder structure. Use **Export** to copy recipes to a thumb drive.
 
-## Basic File Structure
+## Troubleshooting
 
-```text
-Domaille/
-	Settings.txt
-	Processes/
-		default
-		<recipe_name>
-		Steps/
-			default.001
-			default.002
-			default.003
-			<recipe_name>.001
-			...
-```
-
-Recipe files in Processes define overall recipe metadata (description, step count, quantity).
-Step files in Processes/Steps define per-step values like time, pressure, speed, and materials.
+| Problem | Fix |
+|---------|-----|
+| Browser didn't open | Check the console window for the URL (e.g., `http://127.0.0.1:5000`) and open it manually |
+| Port already in use | Chef Domaille automatically tries the next available port. Check the console for the actual URL |
+| Recipes missing after reinstall | Your recipes are safe in `%APPDATA%\Chef Domaille` — they persist across updates |
 
 ## License
 
-MIT. See LICENSE.
+MIT. See [LICENSE](LICENSE).
