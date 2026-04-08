@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import socket
+import threading
+import webbrowser
 from pathlib import Path
 
 from flask import Flask, jsonify, render_template, request
@@ -144,6 +146,9 @@ def create_app(store_root: Path | None = None) -> Flask:
 if __name__ == "__main__":
     host = "127.0.0.1"
     port = _find_available_port(host, 5000)
-    print(f"Starting Chef Domaille at http://{host}:{port}")
+    url = f"http://{host}:{port}"
+    print(f"Starting Chef Domaille at {url}")
     app = create_app()
+    # Open the default browser shortly after server startup begins.
+    threading.Timer(0.8, lambda: webbrowser.open(url, new=2)).start()
     app.run(host=host, port=port, debug=False)
