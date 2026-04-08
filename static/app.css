@@ -2,11 +2,18 @@
   color-scheme: light dark;
   --bg-top: #eef3f9;
   --bg-bottom: #e7edf5;
+  --bg-haze: rgba(37, 99, 235, 0.08);
   --surface: rgba(255, 255, 255, 0.82);
   --surface-strong: #ffffff;
+  --surface-elevated: rgba(255, 255, 255, 0.9);
   --ink: #111827;
   --muted: #667085;
   --line: #d7deea;
+  --field-bg: rgba(255, 255, 255, 0.92);
+  --tab-bg: #f3f6fb;
+  --tab-ink: #334155;
+  --button-secondary-bg: #eef3f9;
+  --button-secondary-ink: #334155;
   --accent: #2563eb;
   --accent-strong: #1f5de2;
   --accent-soft: #ecf2ff;
@@ -32,7 +39,7 @@ body {
   margin: 0;
   font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
   color: var(--ink);
-  background: radial-gradient(1200px 520px at 12% -8%, rgba(37, 99, 235, 0.08), transparent 60%),
+  background: radial-gradient(1200px 520px at 12% -8%, var(--bg-haze), transparent 60%),
               linear-gradient(165deg, var(--bg-top), var(--bg-bottom));
 }
 
@@ -52,7 +59,7 @@ body {
 .topbar {
   padding: 1rem 1.2rem;
   margin-bottom: 1rem;
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--surface-elevated);
 }
 
 .topbar h1 {
@@ -97,7 +104,7 @@ body {
 }
 
 .editor-card {
-  background: rgba(255, 255, 255, 0.86);
+  background: var(--surface);
 }
 
 .side-stack {
@@ -133,7 +140,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 8px;
   min-width: 100px;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--field-bg);
   color: var(--ink);
   accent-color: var(--accent);
 }
@@ -206,8 +213,8 @@ button:hover {
 }
 
 .tab-btn {
-  background: #f3f6fb;
-  color: #334155;
+  background: var(--tab-bg);
+  color: var(--tab-ink);
   border: 1px solid var(--line);
 }
 
@@ -222,7 +229,7 @@ button:hover {
   border-radius: 10px;
   padding: 0.65rem;
   margin-bottom: 0.7rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface-elevated);
 }
 
 .tab-panel h4 {
@@ -291,8 +298,8 @@ button:hover {
 }
 
 .secondary-btn {
-  background: #eef3f9;
-  color: #334155;
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-ink);
   border: 1px solid var(--line);
 }
 
@@ -375,32 +382,25 @@ button:hover {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-top: #0f1726;
-    --bg-bottom: #0b1220;
-    --surface: rgba(17, 24, 39, 0.8);
-    --surface-strong: #131b2c;
-    --ink: #e5ecf7;
-    --muted: #9eabc1;
-    --line: #2a374d;
+    --bg-top: #1f232a;
+    --bg-bottom: #171b21;
+    --bg-haze: rgba(120, 130, 145, 0.08);
+    --surface: rgba(36, 41, 50, 0.85);
+    --surface-strong: #282d36;
+    --surface-elevated: rgba(45, 51, 62, 0.9);
+    --ink: #f2f4f8;
+    --muted: #b1bac8;
+    --line: #3d4553;
+    --field-bg: #2a3039;
+    --tab-bg: #2a3039;
+    --tab-ink: #d5dbe6;
+    --button-secondary-bg: #303743;
+    --button-secondary-ink: #e2e8f0;
     --accent-soft: rgba(37, 99, 235, 0.22);
     --chip-bg: rgba(59, 130, 246, 0.16);
     --chip-line: #39557f;
     --chip-ink: #d9e6ff;
     --shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
-  }
-
-  .topbar {
-    background: rgba(19, 30, 47, 0.8);
-  }
-
-  .tab-btn {
-    background: #19263a;
-    color: #c8d4e6;
-  }
-
-  .secondary-btn {
-    background: #1a2a40;
-    color: #d4e1f2;
   }
 }
 
