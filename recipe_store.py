@@ -88,10 +88,10 @@ class RecipeStore:
             if not self.settings_path.exists():
                 defaults = {
                     "Max Quantity": ["72"],
-                    "Film": ["<None>", "Brown 5µm", "Purple 1µm", "Clear FOS-22"],
+                    "Film": ["<None>", "Brown 5um", "Purple 1um", "Clear FOS-22"],
                     "Pad": ["<None>", "60 Duro Blue", "65 Duro Dark Blue", "70 Duro Violet", 
                             "75 Duro Brown", "80 Duro Green", "85 Duro Gray", "90 Duro Black"],
-                    "Lubricant": ["<None>", "DI Water", "DI Water + Isopropanol"],
+                    "Lubricant": ["<None>", "DI Water"],
                 }
                 settings = RecipeSettings(self.settings_path)
                 settings.write_settings(defaults)
@@ -119,7 +119,7 @@ class RecipeStore:
                         "rRecipeStepUpperPressureLimit": "16",
                         "rRecipeStepFixtureWeight": "2.5",
                         "intRecipeStepOpCode": "300",
-                        "strRecipeStepFilm": "Brown 5µm",
+                        "strRecipeStepFilm": "Brown 5um",
                         "strRecipeStepLubricant": "DI Water",
                         "strRecipeStepPad": "70 Duro Violet",
                         "rRecipeStepSpeedRampDn": "1",
@@ -138,9 +138,9 @@ class RecipeStore:
                         "rRecipeStepUpperPressureLimit": "14",
                         "rRecipeStepFixtureWeight": "2.5",
                         "intRecipeStepOpCode": "310",
-                        "strRecipeStepFilm": "Purple 1µm",
-                        "strRecipeStepLubricant": "DI Water + Isopropanol",
-                        "strRecipeStepPad": "90 Duro Black",
+                        "strRecipeStepFilm": "Purple 1um",
+                        "strRecipeStepLubricant": "DI Water",
+                        "strRecipeStepPad": "70 Duro Violet",
                         "rRecipeStepSpeedRampDn": "1",
                         "rRecipeStepPressureRampDn": "1",
                     },
