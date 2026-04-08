@@ -11,6 +11,28 @@ import threading
 import webbrowser
 from pathlib import Path
 
+
+def _get_version() -> str:
+    """Return app version from git tag, or baked _version.py in a bundle."""
+    try:
+        from _version import __version__
+        return __version__
+    except ImportError:
+        pass
+    try:
+        import subprocess
+        v = subprocess.check_output(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip().lstrip("v")
+        return v
+    except Exception:
+        return "dev"
+
+
+__version__ = _get_version()
+
 from flask import Flask, jsonify, render_template, request, send_file
 
 from recipe_store import RecipeBundle, RecipeStore
@@ -236,7 +258,7 @@ if __name__ == "__main__":
         ctypes.windll.kernel32.SetConsoleTitleW(f"Chef Domaille — {url}")
 
     print()
-    print("  🍳 Chef Domaille")
+    print(f"  🍳 Chef Domaille  v{__version__}")
     print(f"  ─────────────────────────────────────")
     print(f"  Running at:  {url}")
     print(f"  Close this window to stop the server.")
