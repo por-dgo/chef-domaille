@@ -648,6 +648,7 @@ function renderCurrentStep() {
   el("stepNote1").value = step.strRecipeStepDescription1 || "";
   el("stepNote2").value = step.strRecipeStepDescription2 || "";
   renderStepTabs();
+  updatePressurePerContact();
 }
 
 function updateBundleFromHeader() {
@@ -658,11 +659,25 @@ function updateBundleFromHeader() {
   state.bundle.recipe_data.intRecipeNoOfSteps = String(state.bundle.steps.length);
 }
 
+function updatePressurePerContact() {
+  const qty = parseFloat(el("recipeQty")?.value);
+  const pressure = parseFloat(el("stepPressure")?.value);
+  const qtySpan = el("qtyPpcLine");
+  const pressureSpan = el("pressurePpcLine");
+  let text = "";
+  if (qty > 0 && pressure >= 0 && !isNaN(qty) && !isNaN(pressure)) {
+    text = `Pressure per contact: ${(pressure / qty).toFixed(2)} lbs`;
+  }
+  if (qtySpan) qtySpan.textContent = text;
+  if (pressureSpan) pressureSpan.textContent = text;
+}
+
 function renderBundleHeader() {
   if (!state.bundle) return;
   el("recipeName").value = state.bundle.recipe_name;
   el("recipeDescription").value = state.bundle.recipe_data.strRecipeDescription || "";
   el("recipeQty").value = state.bundle.recipe_data.intRecipeQty || "";
+  updatePressurePerContact();
 }
 
 function updateEditorSubtitle() {
@@ -891,6 +906,11 @@ function wireEditorInputs() {
   if (!editorBody) return;
   editorBody.addEventListener("input", () => checkDirty());
   editorBody.addEventListener("change", () => checkDirty());
+
+  const qtyInput = el("recipeQty");
+  const pressureInput = el("stepPressure");
+  if (qtyInput) qtyInput.addEventListener("input", updatePressurePerContact);
+  if (pressureInput) pressureInput.addEventListener("input", updatePressurePerContact);
 }
 
 function wireEvents() {

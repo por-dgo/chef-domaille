@@ -166,7 +166,16 @@ body {
   border-bottom: 1px solid var(--line);
 }
 
-.grid1 label { width: calc(25% - 0.45rem); }
+.grid1 label {
+  width: calc(25% - 0.45rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.grid1 label > input { width: 100%; }
 
 /* ---- Step tab bar (browser-tab style) ---- */
 .step-tab-bar {
@@ -433,9 +442,23 @@ body {
 .grid3 label,
 .grid4 label {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
   gap: 0.3rem;
   font-size: 0.9rem;
+}
+
+.grid2 label > input,
+.grid2 label > select,
+.grid2 label > .combo,
+.grid3 label > input,
+.grid3 label > select,
+.grid3 label > .combo,
+.grid4 label > input,
+.grid4 label > select,
+.grid4 label > .combo {
+  width: 100%;
 }
 
 .grid2 label { width: calc(50% - 0.35rem); }
@@ -712,6 +735,72 @@ button:hover {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* ── Field-help info popovers ── */
+
+.field-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  cursor: help;
+  position: relative;
+  vertical-align: middle;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.field-help-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 280px;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--ink);
+  background: var(--surface-strong);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(31, 41, 55, 0.13);
+  z-index: 900;
+  pointer-events: none;
+  white-space: normal;
+}
+
+.field-help-tip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--surface-strong);
+}
+
+.field-help:hover .field-help-tip,
+.field-help:focus .field-help-tip,
+.field-help:focus-within .field-help-tip {
+  display: block;
+}
+
+.field-help-tip .ppc-line {
+  display: block;
+  margin-top: 0.3rem;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 @media (prefers-color-scheme: dark) {

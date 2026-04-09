@@ -131,11 +131,11 @@
       <!-- Recipe metadata -->
       <div class="recipe-meta">
         <div class="row grid2">
-          <label>Recipe Name<input id="recipeName" /></label>
-          <label>Description<input id="recipeDescription" /></label>
+          <label>Recipe Name<span class="field-help" tabindex="0" role="button" aria-label="Help: Recipe Name">i<span class="field-help-tip">Unique name for this recipe. Must match the folder name on the machine's thumb drive.</span></span><input id="recipeName" /></label>
+          <label>Description<span class="field-help" tabindex="0" role="button" aria-label="Help: Description">i<span class="field-help-tip">Optional description shown on the machine display during operation.</span></span><input id="recipeDescription" /></label>
         </div>
         <div class="row grid1">
-          <label>Qty<input id="recipeQty" type="number" min="2" max="32" /></label>
+          <label>Qty<span class="field-help" tabindex="0" role="button" aria-label="Help: Qty">i<span class="field-help-tip">Maximum contacts loaded in the fixture for this recipe (2–32). Combined with Pressure, determines force per contact.<span class="ppc-line" id="qtyPpcLine"></span></span></span><input id="recipeQty" type="number" min="2" max="32" /></label>
         </div>
       </div>
 
@@ -154,37 +154,37 @@
       <div class="step-zone">
       <section class="tab-panel active" data-tab-panel="motion" role="tabpanel">
         <div class="row grid3">
-          <label>Time (s)<input id="stepTime" type="number" min="10" max="300"></label>
-          <label>Pressure (lbs)<input id="stepPressure" type="number" min="0" max="16" step="0.1"></label>
-          <label>Speed (RPM)<input id="stepSpeed" type="number" min="0"></label>
+          <label>Time (s)<span class="field-help" tabindex="0" role="button" aria-label="Help: Time">i<span class="field-help-tip">Duration this step runs, in seconds (10–300).</span></span><input id="stepTime" type="number" min="10" max="300"></label>
+          <label>Pressure (lbs)<span class="field-help" tabindex="0" role="button" aria-label="Help: Pressure">i<span class="field-help-tip">Total downward force on the fixture (0–16 lbs for the 5320/5316). Divided across all contacts.<span class="ppc-line" id="pressurePpcLine"></span></span></span><input id="stepPressure" type="number" min="0" max="16" step="0.1"></label>
+          <label>Speed (RPM)<span class="field-help" tabindex="0" role="button" aria-label="Help: Speed">i<span class="field-help-tip">Platen/head rotation speed in RPM. Zero is valid if the machine’s “Zero Speed” option is enabled.</span></span><input id="stepSpeed" type="number" min="0"></label>
         </div>
         <div class="row grid2">
-          <label>Speed Ramp Up (s)<input id="stepSpeedRamp" type="number" min="0" max="60"></label>
-          <label>Speed Ramp Down (s)<input id="stepSpeedRampDn" type="number" min="0" max="60"></label>
+          <label>Speed Ramp Up (s)<span class="field-help" tabindex="0" role="button" aria-label="Help: Speed Ramp Up">i<span class="field-help-tip">Seconds to ramp from 0 RPM to programmed speed at step start (0–60).</span></span><input id="stepSpeedRamp" type="number" min="0" max="60"></label>
+          <label>Speed Ramp Down (s)<span class="field-help" tabindex="0" role="button" aria-label="Help: Speed Ramp Down">i<span class="field-help-tip">Seconds to decelerate from programmed speed to stopped at step end (0–60).</span></span><input id="stepSpeedRampDn" type="number" min="0" max="60"></label>
         </div>
         <div class="row grid2">
-          <label>Pressure Ramp Up (s)<input id="stepPressureRamp" type="number" min="0" max="60"></label>
-          <label>Pressure Ramp Down (s)<input id="stepPressureRampDn" type="number" min="0" max="60"></label>
+          <label>Pressure Ramp Up (s)<span class="field-help" tabindex="0" role="button" aria-label="Help: Pressure Ramp Up">i<span class="field-help-tip">Seconds to ramp from 0 to programmed pressure at step start (0–60).</span></span><input id="stepPressureRamp" type="number" min="0" max="60"></label>
+          <label>Pressure Ramp Down (s)<span class="field-help" tabindex="0" role="button" aria-label="Help: Pressure Ramp Down">i<span class="field-help-tip">Seconds to release from programmed pressure to zero at step end (0–60).</span></span><input id="stepPressureRampDn" type="number" min="0" max="60"></label>
         </div>
       </section>
 
       <section class="tab-panel" data-tab-panel="consumables" role="tabpanel" hidden>
         <div class="row grid3">
-          <label>Film
+          <label>Film<span class="field-help" tabindex="0" role="button" aria-label="Help: Film">i<span class="field-help-tip">Abrasive film used for this step. Select from configured options or type a custom value.</span></span>
             <div class="combo" id="comboFilm">
               <input id="stepFilm" autocomplete="off">
               <button type="button" class="combo-toggle" tabindex="-1" aria-label="Show options">&#9662;</button>
               <ul class="combo-list" hidden></ul>
             </div>
           </label>
-          <label>Pad
+          <label>Pad<span class="field-help" tabindex="0" role="button" aria-label="Help: Pad">i<span class="field-help-tip">Polishing pad placed under the film. Select from configured options or type a custom value.</span></span>
             <div class="combo" id="comboPad">
               <input id="stepPad" autocomplete="off">
               <button type="button" class="combo-toggle" tabindex="-1" aria-label="Show options">&#9662;</button>
               <ul class="combo-list" hidden></ul>
             </div>
           </label>
-          <label>Lubricant
+          <label>Lubricant<span class="field-help" tabindex="0" role="button" aria-label="Help: Lubricant">i<span class="field-help-tip">Lubricant applied during polishing (e.g. DI Water). Select from configured options or type a custom value.</span></span>
             <div class="combo" id="comboLubricant">
               <input id="stepLubricant" autocomplete="off">
               <button type="button" class="combo-toggle" tabindex="-1" aria-label="Show options">&#9662;</button>
@@ -193,8 +193,8 @@
           </label>
         </div>
         <div class="row grid2">
-          <label>Step Note 1<input id="stepNote1"></label>
-          <label>Step Note 2<input id="stepNote2"></label>
+          <label>Step Note 1<span class="field-help" tabindex="0" role="button" aria-label="Help: Step Note 1">i<span class="field-help-tip">Optional note displayed to the operator on the machine during this step.</span></span><input id="stepNote1"></label>
+          <label>Step Note 2<span class="field-help" tabindex="0" role="button" aria-label="Help: Step Note 2">i<span class="field-help-tip">Optional second note displayed to the operator on the machine during this step.</span></span><input id="stepNote2"></label>
         </div>
       </section>
       </div>
