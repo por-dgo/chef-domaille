@@ -90,6 +90,8 @@ def main():
         # Bundle the HTML templates and static assets
         "--add-data", "templates;templates",
         "--add-data", "static;static",
+        # Bundle favicon for serving
+        "--add-data", "favicon.ico;.",
         # Exclude heavy/unused modules to keep size down
         "--exclude-module", "unittest",
         "--exclude-module", "test",

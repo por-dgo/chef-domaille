@@ -93,6 +93,10 @@ def create_app(store_root: Path | None = None) -> Flask:
     def home():
         return render_template("index.html")
 
+    @app.get("/favicon.ico")
+    def favicon():
+        return send_file(Path(app.root_path) / "favicon.ico", mimetype="image/x-icon")
+
     @app.get("/api/health")
     def health():
         return jsonify({"ok": True, "store_root": str(store.root), "profile": PROFILE_5316_5320["name"]})
